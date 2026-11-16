@@ -10,17 +10,53 @@ permissions:
   contents: read
 
 jobs:
-  tests:
+  tests-and-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-          cache: pip
-      - name: Install project and test dependencies
-        run: python -m pip install -e ".[test]"
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.8"
+          enable-cache: false
+      - name: Validate committed dependency lock
+        run: |
+          uv lock --check
+          uv sync --locked --extra test
       - name: Compile Python sources
-        run: python -m compileall -q adapter tests
+        run: uv run python -m compileall -q adapter tests
       - name: Run tests
-        run: pytest -q
+        run: uv run pytest -q
+      - name: Validate Docker Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+      - name: Build container image
+        run: docker build --pull --tag litellm-search-mcp-adapter:ci .
+      - name: Smoke-test container startup and liveness
+        run: |
+          docker run --detach --rm --name adapter-ci-smoke \
+            --publish 127.0.0.1:18080:8080 \
+            --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+            --cap-drop ALL --security-opt no-new-privileges --pids-limit 100 --memory 512m --cpus 1.0 \
+            --env LITELLM_BASE_URL=http://127.0.0.1:4000 \
+            --env LITELLM_API_KEY=ci-dummy-litellm-key \
+            --env MCP_BEARER_TOKEN=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+            --env LITELLM_ALLOWED_SEARCH_TOOLS= \
+            --env ADAPTER_ALLOWED_HOSTS=127.0.0.1:18080,127.0.0.1:8080 \
+            --env ADAPTER_ALLOWED_ORIGINS= \
+            litellm-search-mcp-adapter:ci
+          ready=0
+          for attempt in $(seq 1 30); do
+            if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18080/health/live', timeout=2).read()" >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          docker logs adapter-ci-smoke
+          docker stop adapter-ci-smoke
+          test "$ready" -eq 1
