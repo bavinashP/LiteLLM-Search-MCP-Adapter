@@ -93,7 +93,7 @@ Do not mark dynamic client-side refresh as complete merely because the server's 
 
 ### 2.4 Streamable HTTP application
 
-The v2.3.0 server exposes `streamable_http_app()` and `run_streamable_http_async()`. The application method supports:
+The exact v2.3.0 package metadata declares `Requires-Python: >=3.10` (not >=3.11). The v2.3.0 server exposes `streamable_http_app()` and `run_streamable_http_async()`. The application method supports:
 
 - configurable MCP path (default `/mcp`);
 - `stateless_http`;
@@ -120,7 +120,7 @@ The SDK's `MCPServer.custom_route()` documentation explicitly states that custom
 
 ### 3.1 Transport support
 
-OpenHands documentation and configuration sources describe Streamable HTTP as the recommended HTTP MCP transport. The configuration uses the `[mcp]` section and the `shttp_servers` collection.
+Current OpenHands documentation describes Streamable HTTP (SHTTP) as the recommended remote transport. For Agent Canvas/local backend, configure the server through `Customize > MCP Servers`; the UI supports a Bearer token and sends `Authorization: Bearer <token>`. The current general MCP documentation lists Agent Canvas, SDK, and OpenHands Cloud as supported surfaces. The previously referenced `openhands mcp` CLI documentation explicitly says that CLI is no longer actively maintained, so it must not be presented as the preferred setup path for a current installation.
 
 A remote adapter can therefore be configured as an SHTTP server. OpenHands does not need to run in the adapter container; it only needs network access to the adapter endpoint.
 
@@ -138,7 +138,7 @@ The token belongs in the OpenHands server configuration/secret handling, not in 
 
 ### 3.3 Configuration shape
 
-The documented configuration shape is:
+The documented UI configuration is the preferred path for a current Agent Canvas/local-backend installation. The legacy SDK/CLI configuration shape is not the default recommendation. The configuration shape for the current UI is:
 
 ```toml
 [mcp]
@@ -167,7 +167,7 @@ Current official VS Code MCP configuration documentation supports:
 - `url` for the remote MCP endpoint;
 - `headers` for custom HTTP headers.
 
-A Bearer token can be supplied through the Authorization header. VS Code's documentation also warns against storing literal credentials in shared configuration files.
+A Bearer token can be supplied through the Authorization header. For the current Copilot runtime, use an environment-variable reference such as `${MCP_ADAPTER_TOKEN}` in the header value. Do not assume `${input:...}` prompting or a bridge to VS Code SecretStorage is available to the Copilot HTTP header path. VS Code's documentation warns against storing literal credentials in shared configuration files.
 
 ### 4.2 Configuration shape
 
@@ -201,7 +201,7 @@ Both initial clients have a documented path for a static Bearer credential. OAut
 
 **Recommended first-release profile:**
 
-1. Adapter accepts one dedicated Bearer credential for MCP client access.
+1. Adapter accepts one dedicated Bearer credential for MCP client access. The token must be at least 32 characters and must be different from the LiteLLM Virtual Key.
 2. Adapter stores a separate LiteLLM Virtual Key server-side.
 3. The MCP Bearer credential and LiteLLM Virtual Key are different secrets with different purposes.
 4. The adapter never forwards the client Bearer token to LiteLLM.
@@ -267,7 +267,7 @@ The `max_results=5` default is an adapter policy recommendation, not a LiteLLM d
 
 The following values cannot be truthfully confirmed from public documentation and have not yet been tested in the user's private environment:
 
-1. Exact OpenHands version installed on the native Linux server.
+1. Exact OpenHands distribution/surface and version installed on the native Linux server (current Agent Canvas/local backend versus legacy CLI/SDK).
 2. Exact VS Code version and active Copilot harness.
 3. Adapter container host and final DNS name.
 4. Whether adapter-to-LiteLLM traffic can use HTTPS, or whether the private LAN path must temporarily use HTTP with strict network isolation.
@@ -282,7 +282,7 @@ These are deployment/test facts, not blockers to completing the design review. N
 ## 9. Required test plan before release
 
 ### SDK and protocol
-- [ ] Install exactly `mcp==2.3.0` in a clean Python 3.11+ environment.
+- [ ] Install exactly `mcp==2.3.0` in a clean Python 3.10+ environment.
 - [ ] Start a minimal `MCPServer` using Streamable HTTP at `/mcp`.
 - [ ] Verify authenticated `tools/list` and `tools/call`.
 - [ ] Add and remove tools at runtime; verify the next `tools/list` reflects the change.
@@ -352,3 +352,11 @@ These are deployment/test facts, not blockers to completing the design review. N
 **Security:** adapter-side Search Tool exposure allowlist is mandatory because LiteLLM's discovery endpoint is not permission-filtered.  
 **Implementation:** not started. No project code, deployment files, containers, or runtime settings were changed in this review.
 
+
+
+## 12. Documentation corrections from current official sources
+
+- The exact v2.3.0 SDK `pyproject.toml` declares Python `>=3.10`; Python 3.11 is not a minimum requirement. The adapter container uses Python 3.12 as its chosen runtime.
+- Current OpenHands documentation recommends configuring remote SHTTP servers through Agent Canvas `Customize > MCP Servers` (or the supported SDK integration). The legacy `openhands mcp` CLI documentation says the CLI is no longer actively maintained.
+- Current VS Code Copilot configuration supports environment-variable references in HTTP header values. Its documentation explicitly cautions that input prompts and VS Code SecretStorage are not generally available as a bridge for Copilot HTTP header interpolation. Use a user-level configuration and an environment variable supplied to the VS Code/Copilot host process.
+- The adapter's first implementation uses a dedicated static Bearer token, enforces a minimum length of 32 characters, and rejects using the same value as the LiteLLM Virtual Key. This is a private deployment token profile, not OAuth 2.1.
