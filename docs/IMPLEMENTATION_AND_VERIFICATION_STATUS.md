@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Passed — workflow run 84; additional Host/Origin and 401/403 tests added, final CI pending (25 tests, locked Docker build, container smoke test, legacy and modern MCP clients, and live tools-changed subscription)
+**Final lock-enforced CI:** Passed — workflow run 84 (27 tests, Ruff, locked Docker build, container smoke test, legacy and modern MCP clients, dynamic tools-changed subscription, and security boundary tests)
 
 ## Status summary
 
@@ -15,7 +15,7 @@ The first implementation scaffold and initial service code have been committed. 
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
 | MCP Streamable HTTP | CI verified | Official SDK v2.3.0 legacy 2025 and modern 2026 clients completed handshake, tools/list, and tools/call; modern client received ToolsListChanged after a live registry refresh (workflow run 84) |
 | Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 84 |
-| Host/Origin validation | CI verified | Invalid Host returns 421 and invalid Origin returns 403 in workflow test (final CI pending) |
+| Host/Origin validation | CI verified | Invalid MCP Host returns 421 and invalid Origin returns 403 in workflow run 84 |
 | LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 84; private upstream integration pending |
 | Explicit Search Tool allowlist | CI verified | Default-deny and registry replacement/last-known-good tests passed in workflow run 84 |
 | Dynamic discovery/refresh | CI verified | New tool is discovered, registered, and announced with ToolsListChanged; old-client reconnect behavior documented |
@@ -48,8 +48,9 @@ The first implementation scaffold and initial service code have been committed. 
 ### Source and static checks
 - [x] GitHub Actions CI passed on the latest lockfile-based Dockerfile and dynamic notification test commit (workflow run 84).
 - [x] Python compilation succeeds in workflow run 84.
-- [x] All 27 tests expected after the added Host/Origin and auth-denial cases; final CI pending.
-- [ ] Pinned Ruff static lint (0.17.5) is added and awaits CI verification; type checking is not included.
+- [x] All 27 tests pass in workflow run 84.
+- [x] Pinned Ruff 0.17.5 static lint passes in workflow run 84.
+- [ ] Static type checking is not included in this release.
 - [x] Dependency lock is generated with pinned uv 0.13.8, committed, and checked by CI using `uv lock --check`.
 - [x] Container builds from a clean checkout using the committed `uv.lock`.
 - [x] Container starts as the Dockerfile's non-root user with read-only root filesystem, dropped capabilities, resource limits, and liveness check in workflow run 84.
@@ -59,7 +60,7 @@ The first implementation scaffold and initial service code have been committed. 
 - [x] Official MCP SDK v2.3.0 client connects over Streamable HTTP with Bearer authentication and completes legacy 2025 and modern 2026 handshake, tools/list, tools/call, and tools-changed subscription against the mock LiteLLM Search API (workflow run 84).
 - [ ] MCP Inspector manual connection test against the deployed adapter.
 - [x] Missing/invalid Bearer token receives HTTP 401 (workflow run 84).
-- [x] Invalid Host and Origin are rejected (HTTP 421/403; final CI pending).
+- [x] Invalid MCP Host and Origin are rejected (HTTP 421/403; workflow run 84).
 - [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 84).
 - [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 84).
 - [x] Dynamic registry replacement updates the live server tool list and publishes change events (workflow run 84).
@@ -72,7 +73,7 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Confirm `GET /v1/search/tools` succeeds.
 - [ ] Confirm both approved Search Tools execute through the adapter.
 - [ ] Confirm a denied tool returns a sanitized error.
-- [x] Confirm LiteLLM HTTP 401/403 are not retried (final CI pending).
+- [x] Confirm LiteLLM HTTP 401/403 are not retried (workflow run 84).
 - [x] Confirm HTTP 429 retry and Search POST 5xx/no-retry behavior are bounded (workflow run 84).
 - [x] Empty result arrays are accepted (workflow run 84).
 - [x] Provider result fields survive JSON passthrough (workflow run 84).
