@@ -1,6 +1,6 @@
 import pytest
 from mcp.server import MCPServer
-from mcp.server.subscriptions import InMemorySubscriptionBus
+from mcp.server.subscriptions import InMemorySubscriptionBus, ToolsListChanged
 
 from adapter.litellm_client import LiteLLMAPIError
 from adapter.models import SearchTool
@@ -47,3 +47,26 @@ async def test_empty_allowlist_exposes_no_tools():
 
     assert await registry.refresh() is True
     assert await server.list_tools() == []
+
+
+@pytest.mark.asyncio
+async def test_registry_replaces_tools_and_publishes_change_events():
+    bus = InMemorySubscriptionBus()
+    events = []
+    bus.subscribe(events.append)
+    server = MCPServer("registry-test", subscriptions=bus)
+    client = FakeClient()
+    registry = DynamicToolRegistry(
+        server,
+        bus,
+        client,
+        frozenset({"allowed_search", "replacement_search"}),
+    )
+
+    assert await registry.refresh() is True
+    client.tools = [SearchTool("replacement_search", "test")]
+    assert await registry.refresh() is True
+
+    tools = await server.list_tools()
+    assert [tool.name for tool in tools] == ["litellm_search__replacement_search"]
+    assert sum(isinstance(event, ToolsListChanged) for event in events) == 2
