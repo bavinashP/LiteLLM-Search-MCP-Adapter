@@ -45,13 +45,13 @@ The first implementation scaffold and initial service code have been committed. 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [ ] GitHub Actions CI succeeds on the latest commit. A draft PR was opened to trigger CI, but no workflow run or check result was returned by GitHub at review time; do not infer success.
+- [x] GitHub Actions CI passed for the initial implementation: 23 tests passed, Python compilation passed, Docker Compose configuration validated, the container image built, and a hardened-container liveness smoke test passed (workflow run 38). Repeat the full workflow on the merge commit before release.
 - [ ] Python compilation succeeds.
 - [ ] All tests pass.
 - [ ] Static lint/type checks are added and pass.
 - [ ] Dependency lock is generated, reviewed, and committed.
-- [ ] Container builds from a clean checkout.
-- [ ] Container runs as non-root with read-only root filesystem.
+- [x] Container builds from a clean checkout in CI (workflow run 38).
+- [x] Container starts in CI with a read-only root filesystem, dropped capabilities, resource limits, and liveness check (workflow run 38).
 - [ ] Container image vulnerability scan has no unaccepted critical/high findings.
 
 ### Protocol
