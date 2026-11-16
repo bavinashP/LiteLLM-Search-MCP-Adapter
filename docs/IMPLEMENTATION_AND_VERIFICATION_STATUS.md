@@ -49,7 +49,7 @@ The first implementation scaffold and initial service code have been committed. 
 - [x] GitHub Actions CI passed on the latest lockfile-based Dockerfile and dynamic notification test commit (workflow run 78).
 - [x] Python compilation succeeds in workflow run 78.
 - [x] All 25 tests pass in workflow run 78.
-- [ ] Static lint/type checks are added and pass.
+- [ ] Pinned Ruff static lint (0.17.5) is added and awaits CI verification; type checking is not included.
 - [x] Dependency lock is generated with pinned uv 0.13.8, committed, and checked by CI using `uv lock --check`.
 - [x] Container builds from a clean checkout using the committed `uv.lock`.
 - [x] Container starts as the Dockerfile's non-root user with read-only root filesystem, dropped capabilities, resource limits, and liveness check in workflow run 78.
