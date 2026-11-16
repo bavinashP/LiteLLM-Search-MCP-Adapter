@@ -83,7 +83,7 @@ def build_app(settings: Settings):
         transport_security=transport_security,
         host=settings.host,
     )
-    return BearerAuthMiddleware(app, settings.mcp_bearer_token)
+    return BearerAuthMiddleware(app, settings.mcp_bearer_token, settings.mcp_requests_per_minute)
 
 
 def main() -> None:
