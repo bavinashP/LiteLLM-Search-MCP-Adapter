@@ -51,6 +51,7 @@ class Settings:
     refresh_seconds: int
     request_timeout_seconds: int
     max_response_bytes: int
+    mcp_requests_per_minute: int
     host: str
     port: int
     log_level: str
@@ -79,6 +80,7 @@ class Settings:
             refresh_seconds=_integer("DISCOVERY_REFRESH_SECONDS", 30, 10, 3600),
             request_timeout_seconds=_integer("LITELLM_TIMEOUT_SECONDS", 30, 5, 120),
             max_response_bytes=_integer("MAX_RESPONSE_BYTES", 2_000_000, 1024, 20_000_000),
+            mcp_requests_per_minute=_integer("MCP_REQUESTS_PER_MINUTE", 120, 1, 10_000),
             host=os.getenv("ADAPTER_HOST", "0.0.0.0").strip() or "0.0.0.0",
             port=_integer("ADAPTER_PORT", 8080, 1, 65535),
             log_level=log_level,
