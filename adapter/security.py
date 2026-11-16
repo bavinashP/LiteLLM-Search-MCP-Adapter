@@ -43,18 +43,21 @@ class BearerAuthMiddleware:
 
         if path == "/mcp":
             now = time.monotonic()
+            retry_after: int | None = None
             async with self._rate_lock:
                 while self._requests and now - self._requests[0] >= 60:
                     self._requests.popleft()
                 if len(self._requests) >= self._limit:
                     retry_after = max(1, int(60 - (now - self._requests[0])))
-                    response = JSONResponse(
-                        {"error": "rate limit exceeded"},
-                        status_code=429,
-                        headers={"Retry-After": str(retry_after)},
-                    )
-                    await response(scope, receive, send)
-                    return
-                self._requests.append(now)
+                else:
+                    self._requests.append(now)
+            if retry_after is not None:
+                response = JSONResponse(
+                    {"error": "rate limit exceeded"},
+                    status_code=429,
+                    headers={"Retry-After": str(retry_after)},
+                )
+                await response(scope, receive, send)
+                return
 
         await self.app(scope, receive, send)
