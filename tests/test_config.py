@@ -32,3 +32,19 @@ def test_settings_defaults_and_empty_allowlist(monkeypatch):
     settings = Settings.from_env()
     assert settings.refresh_seconds == 30
     assert settings.allowed_search_tools == frozenset()
+
+
+def test_settings_rejects_short_adapter_token(monkeypatch):
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://litellm.internal:4000")
+    monkeypatch.setenv("LITELLM_API_KEY", "server-secret")
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "too-short")
+    with pytest.raises(ConfigurationError, match="32 ASCII"):
+        Settings.from_env()
+
+
+def test_settings_rejects_reused_litellm_secret(monkeypatch):
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://litellm.internal:4000")
+    monkeypatch.setenv("LITELLM_API_KEY", "same-secret-" + "x" * 32)
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "same-secret-" + "x" * 32)
+    with pytest.raises(ConfigurationError, match="different secrets"):
+        Settings.from_env()
