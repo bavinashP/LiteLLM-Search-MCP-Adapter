@@ -135,7 +135,7 @@ The two live provider responses confirm the `results` array and the three common
 
 ## 4. MCP Python SDK review
 
-The official MCP Python SDK repository identifies Python 3.11+ as the runtime requirement. Its release notes identify v2.0.0 as the stable v2 line, with v1.x in maintenance mode. The release history currently surfaced v2.3.0 as a later v2 release.
+The official MCP Python SDK repository identifies Python 3.10+ as the runtime requirement. Its release notes identify v2.0.0 as the stable v2 line, with v1.x in maintenance mode. The release history currently surfaced v2.3.0 as a later v2 release.
 
 Recommendation:
 - use the official `mcp` Python SDK;
@@ -188,3 +188,8 @@ The following work remains before implementation:
 ---
 
 **Review outcome:** the architecture is feasible and the core LiteLLM API path is confirmed against both live tests and the exact v1.109.0 source. The discovery/authorization distinction above is a required security clarification. Implementation remains on hold until the remaining verification gates and deployment/authentication decisions are completed.
+
+
+## 8. Follow-up corrections
+
+The exact MCP SDK v2.3.0 package metadata confirms `Requires-Python: >=3.10`; the container uses Python 3.12 as a project runtime choice. Current OpenHands setup guidance should target Agent Canvas/local-backend `Customize > MCP Servers` with SHTTP and Bearer authentication; the older CLI MCP guide states that the CLI is no longer actively maintained. Current VS Code Copilot HTTP headers should use environment-variable references rather than assuming input prompts or SecretStorage interpolation.
