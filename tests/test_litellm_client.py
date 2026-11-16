@@ -114,3 +114,23 @@ async def test_response_size_is_bounded():
             await client.search("tool", "query", 2)
     finally:
         await client.aclose()
+
+
+@pytest.mark.parametrize("status_code", [401, 403])
+@pytest.mark.asyncio
+async def test_authorization_failures_are_not_retried(status_code):
+    calls = 0
+
+    def handler(_request):
+        nonlocal calls
+        calls += 1
+        return httpx.Response(status_code, json={"error": "denied"})
+
+    client = LiteLLMClient("http://litellm.test", "test-key", transport=httpx.MockTransport(handler))
+    try:
+        with pytest.raises(LiteLLMAPIError) as exc:
+            await client.search("tool", "query", 1)
+        assert exc.value.status_code == status_code
+        assert calls == 1
+    finally:
+        await client.aclose()
