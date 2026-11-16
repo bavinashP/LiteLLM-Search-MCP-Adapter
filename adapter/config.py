@@ -60,17 +60,26 @@ class Settings:
         token = _required("MCP_BEARER_TOKEN")
         if len(token) < 32:
             raise ConfigurationError("MCP_BEARER_TOKEN must contain at least 32 characters")
+        api_key = _required("LITELLM_API_KEY")
+        if token == api_key:
+            raise ConfigurationError("MCP_BEARER_TOKEN and LITELLM_API_KEY must be different secrets")
+        allowed_hosts = _csv("ADAPTER_ALLOWED_HOSTS", "localhost,127.0.0.1")
+        if not allowed_hosts:
+            raise ConfigurationError("ADAPTER_ALLOWED_HOSTS must contain at least one host")
+        log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+        if log_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+            raise ConfigurationError("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return cls(
             litellm_base_url=_base_url(_required("LITELLM_BASE_URL")),
-            litellm_api_key=_required("LITELLM_API_KEY"),
+            litellm_api_key=api_key,
             mcp_bearer_token=token,
             allowed_search_tools=frozenset(_csv("LITELLM_ALLOWED_SEARCH_TOOLS")),
-            allowed_hosts=_csv("ADAPTER_ALLOWED_HOSTS", "localhost,127.0.0.1"),
+            allowed_hosts=allowed_hosts,
             allowed_origins=_csv("ADAPTER_ALLOWED_ORIGINS"),
             refresh_seconds=_integer("DISCOVERY_REFRESH_SECONDS", 30, 10, 3600),
             request_timeout_seconds=_integer("LITELLM_TIMEOUT_SECONDS", 30, 5, 120),
             max_response_bytes=_integer("MAX_RESPONSE_BYTES", 2_000_000, 1024, 20_000_000),
             host=os.getenv("ADAPTER_HOST", "0.0.0.0").strip() or "0.0.0.0",
             port=_integer("ADAPTER_PORT", 8080, 1, 65535),
-            log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+            log_level=log_level,
         )
