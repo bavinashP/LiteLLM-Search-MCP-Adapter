@@ -169,11 +169,13 @@ Current official VS Code MCP configuration documentation supports:
 
 A Bearer token can be supplied through the Authorization header. For the current Copilot runtime, use an environment-variable reference such as `${MCP_ADAPTER_TOKEN}` in the header value. Do not assume `${input:...}` prompting or a bridge to VS Code SecretStorage is available to the Copilot HTTP header path. VS Code's documentation warns against storing literal credentials in shared configuration files.
 
-### 4.2 Configuration shape
+### 4.2 Current Copilot configuration shape
+
+The current GitHub Copilot harness uses the portable top-level `mcpServers` object in `~/.copilot/mcp-config.json` (or `$COPILOT_HOME/mcp-config.json`). The recommended UI path is **Chat: Open Customizations > MCP Servers > Global > Copilot Global**.
 
 ```json
 {
-  "servers": {
+  "mcpServers": {
     "litellm-search": {
       "type": "http",
       "url": "https://<adapter-host>/mcp",
@@ -185,7 +187,7 @@ A Bearer token can be supplied through the Authorization header. For the current
 }
 ```
 
-This is a configuration-shape example only. Do not commit a populated token. The exact configuration destination (user profile versus workspace) must be chosen so that credentials are not shared accidentally.
+The Copilot portable format supports `${NAME}` environment-variable references in HTTP header values. Supply `MCP_ADAPTER_TOKEN` in the environment of the host where the Copilot harness runs; for remote sessions, that means the remote host/container. Do not use the old editor-managed `servers` object or `.vscode/mcp.json` for new Copilot setups: the Local harness is deprecated and scheduled for removal in February 2027. Do not commit a populated token.
 
 ### 4.3 Compatibility qualification
 
@@ -372,3 +374,8 @@ These are deployment/test facts, not blockers to completing the design review. N
 ## 13. Implementation follow-up
 
 The first implementation now uses a single shared static Bearer token, a 32-character minimum, constant-time comparison, and a global per-process rate limit (default 120 HTTP requests/minute). Because all clients initially share one token, this is not per-client/per-user throttling. The LiteLLM HTTP client avoids retrying Search POST requests after ambiguous transport failures or 5xx responses to reduce the risk of duplicate paid searches. CI and actual client verification remain pending.
+
+
+## 14. Current VS Code Copilot configuration correction
+
+The current VS Code documentation distinguishes the **Copilot harness portable format** from the deprecated editor-managed Local format. New setups must use the top-level `mcpServers` object in `~/.copilot/mcp-config.json` (or `$COPILOT_HOME/mcp-config.json`) and the **Global > Copilot Global** destination. The old `servers` format in `.vscode/mcp.json` or profile `mcp.json` is for the deprecated Local harness and should not be used for new Copilot deployments. Environment references in portable HTTP headers use `${NAME}`; input prompts and VS Code SecretStorage are not available as a bridge for this Copilot header path.
