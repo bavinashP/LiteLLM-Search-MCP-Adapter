@@ -409,3 +409,8 @@ The exact MCP SDK v2.3.0 `pyproject.toml` declares Python `>=3.10`; the adapter 
 ## 15. Initial implementation status and explicit limits
 
 The first adapter implementation has been committed under `adapter/`, with Docker/Compose files and unit tests. It uses a global per-process rate limit because the initial authentication profile uses one shared Bearer token; it does not claim per-user quotas. The SDK publishes the 2026 subscription notification after registry changes; older clients may require reconnect/new conversation. CI, lockfile generation, container build/scan, actual OpenHands/VS Code client tests, and private LiteLLM end-to-end tests remain release gates.
+
+
+## 16. Reproducible dependency resolution
+
+The implementation now pins uv `0.13.8`, commits `uv.lock`, pins the setuptools build backend to `80.9.0`, and builds the Docker image with `uv sync --locked --no-dev --no-editable`. CI checks lock consistency with `uv lock --check`. The lock-enforced Docker build must pass the latest CI run before production sign-off.
