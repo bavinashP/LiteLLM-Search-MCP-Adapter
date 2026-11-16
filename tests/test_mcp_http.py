@@ -10,6 +10,7 @@ import pytest
 import uvicorn
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+from mcp.client.subscriptions import ToolsListChanged, listen
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -42,6 +43,7 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
     adapter_token = "a" * 64
     litellm_key = "ci-dummy-litellm-key"
     search_calls: list[dict] = []
+    discovered_tool_names = ["spp_Parallel"]
 
     async def discovery(request: Request):
         if request.headers.get("authorization") != f"Bearer {litellm_key}":
@@ -49,8 +51,11 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
         return JSONResponse({
             "object": "list",
             "data": [
-                {"search_tool_name": "spp_Parallel", "search_provider": "parallel_ai"},
-                {"search_tool_name": "openhands_tavily", "search_provider": "tavily"},
+                {
+                    "search_tool_name": name,
+                    "search_provider": "parallel_ai" if name == "spp_Parallel" else "tavily",
+                }
+                for name in discovered_tool_names
             ],
         })
 
@@ -79,10 +84,10 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
         litellm_base_url=f"http://127.0.0.1:{litellm_port}",
         litellm_api_key=litellm_key,
         mcp_bearer_token=adapter_token,
-        allowed_search_tools=frozenset({"spp_Parallel"}),
+        allowed_search_tools=frozenset({"spp_Parallel", "openhands_tavily"}),
         allowed_hosts=(f"127.0.0.1:{adapter_port}",),
         allowed_origins=(),
-        refresh_seconds=30,
+        refresh_seconds=10,
         request_timeout_seconds=5,
         max_response_bytes=1024 * 1024,
         mcp_requests_per_minute=120,
@@ -126,6 +131,17 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
                     listed = await session.list_tools()
                     names = [tool.name for tool in listed.tools]
                     assert names == ["litellm_search__spp_parallel"]
+
+                    async with listen(session, tools_list_changed=True) as subscription:
+                        discovered_tool_names.append("openhands_tavily")
+                        event = await asyncio.wait_for(subscription.__anext__(), timeout=15)
+                        assert isinstance(event, ToolsListChanged)
+                        updated = await session.list_tools()
+                        updated_names = [tool.name for tool in updated.tools]
+                        assert updated_names == [
+                            "litellm_search__spp_parallel",
+                            "litellm_search__openhands_tavily",
+                        ]
 
                     result = await session.call_tool(
                         "litellm_search__spp_parallel",
