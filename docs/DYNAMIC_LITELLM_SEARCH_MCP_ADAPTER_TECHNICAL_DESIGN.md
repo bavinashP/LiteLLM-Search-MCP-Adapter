@@ -413,4 +413,4 @@ The first adapter implementation has been committed under `adapter/`, with Docke
 
 ## 16. Reproducible dependency resolution
 
-The implementation now pins uv `0.13.8`, commits `uv.lock`, pins the setuptools build backend to `80.9.0`, and builds the Docker image with `uv sync --locked --no-dev --no-editable`. CI checks lock consistency with `uv lock --check`. The lock-enforced Docker build must pass the latest CI run before production sign-off.
+The implementation now pins uv `0.13.8`, commits `uv.lock`, pins the setuptools build backend to `80.9.0`, and builds the Docker image with `uv sync --locked --no-dev --no-editable`. CI checks lock consistency with `uv lock --check`. The lock-enforced Docker build passed CI workflow run 62. Production sign-off still requires private LiteLLM integration, protocol-level MCP client tests, actual OpenHands/VS Code tests, deployment-host validation, and image vulnerability scanning.
