@@ -110,5 +110,5 @@ class DynamicToolRegistry:
 
     async def run_refresh_loop(self, interval_seconds: int) -> None:
         while True:
-            await asyncio.sleep(interval_seconds)
             await self.refresh()
+            await asyncio.sleep(interval_seconds)
