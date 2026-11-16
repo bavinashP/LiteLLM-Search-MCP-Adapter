@@ -2,16 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
-from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib.parse import quote
 
 import httpx
 
 from adapter.models import SearchTool
-
-logger = logging.getLogger("adapter.litellm")
 
 
 class LiteLLMAPIError(RuntimeError):
@@ -33,6 +30,7 @@ class LiteLLMClient:
             base_url=base_url.rstrip("/"),
             headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
             timeout=httpx.Timeout(timeout_seconds, connect=min(timeout_seconds, 10)),
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
             follow_redirects=False,
             transport=transport,
         )
@@ -44,39 +42,53 @@ class LiteLLMClient:
     async def _request_json(self, method: str, path: str, *, body: dict | None = None) -> dict:
         for attempt in range(3):
             try:
-                response = await self._client.request(method, path, json=body)
+                async with self._client.stream(method, path, json=body) as response:
+                    status_code = response.status_code
+                    headers = response.headers
+                    if status_code in {401, 403}:
+                        raise LiteLLMAPIError(
+                            f"LiteLLM denied this request (HTTP {status_code})",
+                            status_code=status_code,
+                        )
+
+                    if status_code == 429 or 500 <= status_code <= 599:
+                        if attempt < 2:
+                            delay = self._retry_delay(headers.get("Retry-After"), attempt)
+                            retry = True
+                        else:
+                            retry = False
+                    else:
+                        retry = False
+
+                    if retry:
+                        pass
+                    elif status_code < 200 or status_code >= 300:
+                        raise LiteLLMAPIError(
+                            f"LiteLLM returned HTTP {status_code}",
+                            status_code=status_code,
+                        )
+                    else:
+                        chunks = bytearray()
+                        async for chunk in response.aiter_bytes():
+                            chunks.extend(chunk)
+                            if len(chunks) > self._max_response_bytes:
+                                raise LiteLLMAPIError("LiteLLM response exceeded the configured size limit")
+                        try:
+                            payload = json.loads(chunks)
+                        except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as exc:
+                            raise LiteLLMAPIError("LiteLLM returned invalid JSON") from exc
+                        if not isinstance(payload, dict):
+                            raise LiteLLMAPIError("LiteLLM returned an unexpected JSON response")
+                        return payload
+
+                if retry:
+                    await asyncio.sleep(delay)
+                    continue
             except (httpx.TimeoutException, httpx.TransportError) as exc:
                 if attempt < 2:
                     await asyncio.sleep(0.25 * (2**attempt))
                     continue
                 raise LiteLLMAPIError("LiteLLM request failed due to a network or timeout error") from exc
-
-            if response.status_code in {401, 403}:
-                raise LiteLLMAPIError(
-                    f"LiteLLM denied this request (HTTP {response.status_code})",
-                    status_code=response.status_code,
-                )
-
-            if response.status_code == 429 or 500 <= response.status_code <= 599:
-                if attempt < 2:
-                    await asyncio.sleep(self._retry_delay(response.headers.get("Retry-After"), attempt))
-                    continue
-
-            if response.status_code < 200 or response.status_code >= 300:
-                raise LiteLLMAPIError(
-                    f"LiteLLM returned HTTP {response.status_code}",
-                    status_code=response.status_code,
-                )
-
-            if len(response.content) > self._max_response_bytes:
-                raise LiteLLMAPIError("LiteLLM response exceeded the configured size limit")
-            try:
-                payload = response.json()
-            except (json.JSONDecodeError, ValueError) as exc:
-                raise LiteLLMAPIError("LiteLLM returned invalid JSON") from exc
-            if not isinstance(payload, dict):
-                raise LiteLLMAPIError("LiteLLM returned an unexpected JSON response")
-            return payload
 
         raise LiteLLMAPIError("LiteLLM request failed after bounded retries")
 
@@ -135,7 +147,6 @@ class LiteLLMClient:
             f"/v1/search/{encoded_name}",
             body={"query": query.strip(), "max_results": max_results},
         )
-        results = payload.get("results")
-        if not isinstance(results, list):
+        if not isinstance(payload.get("results"), list):
             raise LiteLLMAPIError("LiteLLM Search response did not contain a results array")
         return payload
