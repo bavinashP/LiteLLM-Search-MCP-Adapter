@@ -33,6 +33,10 @@ def _integer(name: str, default: int, minimum: int, maximum: int) -> int:
 
 def _base_url(value: str) -> str:
     parsed = urlsplit(value)
+    try:
+        parsed.port
+    except ValueError as exc:
+        raise ConfigurationError("LITELLM_BASE_URL contains an invalid port") from exc
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ConfigurationError("LITELLM_BASE_URL must be an absolute HTTP(S) URL")
     if parsed.path not in {"", "/"} or parsed.username or parsed.password or parsed.query or parsed.fragment:
