@@ -62,8 +62,8 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Invalid Host and Origin are rejected.
 - [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 72).
 - [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 72).
-- [ ] Dynamic add/remove changes the server registry.
-- [ ] 2026 protocol clients receive a tools-changed subscription event.
+- [x] Dynamic registry replacement updates the live server tool list and publishes change events (unit test added; final CI pending).
+- [ ] 2026 protocol client receives a tools-changed subscription event end-to-end (test added; final CI pending).
 - [ ] Legacy clients are tested; if they do not refresh automatically, reconnect/new conversation is the supported fallback.
 
 ### LiteLLM
