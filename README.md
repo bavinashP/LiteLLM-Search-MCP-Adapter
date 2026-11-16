@@ -6,6 +6,14 @@ A standalone Model Context Protocol (MCP) Streamable HTTP server that dynamicall
 
 The initial implementation has been committed, but **it is not yet certified for production**. The repository CI and real-client integration tests must pass before deployment. See [implementation and verification status](docs/IMPLEMENTATION_AND_VERIFICATION_STATUS.md).
 
+## Project documentation
+
+- [Technical design](docs/DYNAMIC_LITELLM_SEARCH_MCP_ADAPTER_TECHNICAL_DESIGN.md)
+- [LiteLLM v1.109.0 API/source review](docs/TECHNICAL_REVIEW_LITELLM_V1_109_0.md)
+- [MCP SDK and client compatibility review](docs/MCP_SDK_AND_CLIENT_COMPATIBILITY_REVIEW.md)
+- [Implementation and verification status](docs/IMPLEMENTATION_AND_VERIFICATION_STATUS.md)
+- [Linux deployment runbook](docs/DEPLOYMENT_RUNBOOK.md)
+
 ## Architecture
 
 ```text
