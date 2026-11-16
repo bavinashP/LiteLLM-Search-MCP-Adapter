@@ -14,7 +14,7 @@ The standalone adapter design remains viable. The project owner's live tests est
 
 The exact LiteLLM v1.109.0 source confirms the endpoint paths and documents the request contract. One important security/design clarification was found: **the v1.109.0 `GET /v1/search/tools` implementation lists configured router Search Tools; it does not apply the key/team Search Tool allowlist filter.** The POST execution endpoint separately calls the Search Tool authorization check. Therefore, discovery output must never be treated as proof that the current Virtual Key is authorized to execute every listed tool.
 
-No application code, server configuration, container, or dependency files have been created or changed.
+At the time of this source/live-API review, no application code had been changed. The first implementation has since been committed and is tracked separately in `docs/IMPLEMENTATION_AND_VERIFICATION_STATUS.md`.
 
 ## 2. Live test evidence supplied by the project owner
 
@@ -187,7 +187,7 @@ The following work remains before implementation:
 
 ---
 
-**Review outcome:** the architecture is feasible and the core LiteLLM API path is confirmed against both live tests and the exact v1.109.0 source. The discovery/authorization distinction above is a required security clarification. Implementation remains on hold until the remaining verification gates and deployment/authentication decisions are completed.
+**Review outcome:** the architecture is feasible and the core LiteLLM API path is confirmed against both live tests and the exact v1.109.0 source. The discovery/authorization distinction above is a required security clarification. The initial implementation is now committed. Remaining release gates are CI on the locked build (now passed), protocol-level client tests, private LiteLLM integration, and actual OpenHands/VS Code/Linux deployment.
 
 
 ## 8. Follow-up corrections
