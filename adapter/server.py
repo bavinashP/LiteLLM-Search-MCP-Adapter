@@ -80,6 +80,8 @@ def build_app(settings: Settings):
         streamable_http_path="/mcp",
         stateless_http=False,
         max_request_body_size=1_048_576,
+        session_idle_timeout=600,
+        max_sessions=100,
         transport_security=transport_security,
         host=settings.host,
     )
