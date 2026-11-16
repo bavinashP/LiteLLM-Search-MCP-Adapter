@@ -34,7 +34,6 @@ def build_app(settings: Settings):
     async def lifespan(_server: MCPServer):
         nonlocal refresh_task
         registry = registry_holder["registry"]
-        await registry.refresh()
         refresh_task = asyncio.create_task(registry.run_refresh_loop(settings.refresh_seconds))
         try:
             yield {}
@@ -65,9 +64,12 @@ def build_app(settings: Settings):
     @server.custom_route("/health/ready", methods=["GET"], include_in_schema=False)
     async def readiness(_request: Request):
         status = registry.status
-        body = {"status": "ready" if status.ready and status.last_refresh_ok else "degraded",
-                "registered_tools": status.tool_count}
-        return JSONResponse(body, status_code=200 if status.ready else 503)
+        ready = status.ready and status.last_refresh_ok
+        body = {
+            "status": "ready" if ready else "degraded",
+            "registered_tools": status.tool_count,
+        }
+        return JSONResponse(body, status_code=200 if ready else 503)
 
     transport_security = TransportSecuritySettings(
         enable_dns_rebinding_protection=True,
