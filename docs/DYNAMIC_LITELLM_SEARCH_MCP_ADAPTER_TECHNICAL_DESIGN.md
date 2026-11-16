@@ -1,6 +1,6 @@
 # Dynamic LiteLLM Search MCP Adapter — Technical Design
 
-**Status:** Design baseline — implementation not started  
+**Status:** Initial implementation committed — verification and deployment pending  
 **Date:** 2026-11-17  
 **Target repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Target LiteLLM version:** `v1.109.0`
@@ -404,3 +404,8 @@ These are implementation gates, not reasons to stop the design work:
 ## 14. Implementation baseline corrections
 
 The exact MCP SDK v2.3.0 `pyproject.toml` declares Python `>=3.10`; the adapter container deliberately uses Python 3.12. The first-release client configuration uses the current OpenHands Agent Canvas/local-backend MCP settings (SHTTP + Bearer) and VS Code HTTP MCP configuration with a process environment-variable reference for the Authorization header. The legacy OpenHands MCP CLI is not the recommended setup path because its documentation marks that CLI as no longer actively maintained.
+
+
+## 15. Initial implementation status and explicit limits
+
+The first adapter implementation has been committed under `adapter/`, with Docker/Compose files and unit tests. It uses a global per-process rate limit because the initial authentication profile uses one shared Bearer token; it does not claim per-user quotas. The SDK publishes the 2026 subscription notification after registry changes; older clients may require reconnect/new conversation. CI, lockfile generation, container build/scan, actual OpenHands/VS Code client tests, and private LiteLLM end-to-end tests remain release gates.
