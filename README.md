@@ -172,6 +172,7 @@ Any client that supports MCP Streamable HTTP and can send an Authorization Beare
 
 ```bash
 uv sync --locked --extra test
+uvx --from ruff==0.17.5 ruff check adapter tests
 uv run python -m compileall -q adapter tests
 uv run pytest -q
 ```
