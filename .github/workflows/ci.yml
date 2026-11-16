@@ -13,17 +13,23 @@ jobs:
   tests-and-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-          cache: pip
-      - name: Install project and test dependencies
-        run: python -m pip install -e ".[test]"
+      - name: Install pinned uv
+        uses: 68559e99cc807c1eb7e9238fd43a15bba460eec2 # astral-sh/setup-uv v10.3.3
+        with:
+          version: "0.13.8"
+          enable-cache: false
+      - name: Generate and validate dependency lock
+        run: |
+          uv lock
+          uv sync --locked --extra test
       - name: Compile Python sources
-        run: python -m compileall -q adapter tests
+        run: uv run python -m compileall -q adapter tests
       - name: Run tests
-        run: pytest -q
+        run: uv run pytest -q
       - name: Validate Docker Compose configuration
         run: |
           cp .env.example .env
@@ -45,7 +51,7 @@ jobs:
             litellm-search-mcp-adapter:ci
           ready=0
           for attempt in $(seq 1 30); do
-            if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18080/health/live', timeout=2).read()"; then
+            if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18080/health/live', timeout=2).read()" >/dev/null 2>&1; then
               ready=1
               break
             fi
@@ -54,3 +60,11 @@ jobs:
           docker logs adapter-ci-smoke
           docker stop adapter-ci-smoke
           test "$ready" -eq 1
+      - name: Upload generated dependency lock
+        uses: cf430e030ddbb5b0abf93d22962f4752f3646cd9 # actions/upload-artifact v7.0.2
+        with:
+          name: generated-uv-lock
+          path: uv.lock
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
