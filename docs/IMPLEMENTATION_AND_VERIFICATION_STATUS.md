@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Passed — workflow run 78 (25 tests, locked Docker build, container smoke test, legacy and modern MCP clients, and live tools-changed subscription)
+**Final lock-enforced CI:** Passed — workflow run 82 (25 tests, locked Docker build, container smoke test, legacy and modern MCP clients, and live tools-changed subscription)
 
 ## Status summary
 
@@ -13,14 +13,14 @@ The first implementation scaffold and initial service code have been committed. 
 | LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
 | MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
-| MCP Streamable HTTP | CI verified | Official SDK v2.3.0 legacy 2025 and modern 2026 clients completed handshake, tools/list, and tools/call; modern client received ToolsListChanged after a live registry refresh (workflow run 78) |
-| Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 78 |
+| MCP Streamable HTTP | CI verified | Official SDK v2.3.0 legacy 2025 and modern 2026 clients completed handshake, tools/list, and tools/call; modern client received ToolsListChanged after a live registry refresh (workflow run 82) |
+| Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 82 |
 | Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
-| LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 78; private upstream integration pending |
-| Explicit Search Tool allowlist | CI verified | Default-deny and registry replacement/last-known-good tests passed in workflow run 78 |
+| LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 82; private upstream integration pending |
+| Explicit Search Tool allowlist | CI verified | Default-deny and registry replacement/last-known-good tests passed in workflow run 82 |
 | Dynamic discovery/refresh | CI verified | New tool is discovered, registered, and announced with ToolsListChanged; old-client reconnect behavior documented |
-| Last-known-good registry | CI verified | Registry retention/replacement and change-event tests passed in workflow run 78 |
-| Response size/retry limits | CI verified | Response cap, bounded retry, and no duplicate POST retry tests passed in workflow run 78 |
+| Last-known-good registry | CI verified | Registry retention/replacement and change-event tests passed in workflow run 82 |
+| Response size/retry limits | CI verified | Response cap, bounded retry, and no duplicate POST retry tests passed in workflow run 82 |
 | Docker non-root image | CI verified | Locked image built and started read-only with dropped capabilities/resource limits; vulnerability scan pending |
 | Compose hardening | CI verified | Compose config validated; private-host deployment validation pending |
 | OpenHands integration | Configuration documented | Exact installed distribution/version and live connection not verified |
@@ -46,24 +46,24 @@ The first implementation scaffold and initial service code have been committed. 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [x] GitHub Actions CI passed on the latest lockfile-based Dockerfile and dynamic notification test commit (workflow run 78).
-- [x] Python compilation succeeds in workflow run 78.
-- [x] All 25 tests pass in workflow run 78.
+- [x] GitHub Actions CI passed on the latest lockfile-based Dockerfile and dynamic notification test commit (workflow run 82).
+- [x] Python compilation succeeds in workflow run 82.
+- [x] All 25 tests pass in workflow run 82.
 - [ ] Pinned Ruff static lint (0.17.5) is added and awaits CI verification; type checking is not included.
 - [x] Dependency lock is generated with pinned uv 0.13.8, committed, and checked by CI using `uv lock --check`.
 - [x] Container builds from a clean checkout using the committed `uv.lock`.
-- [x] Container starts as the Dockerfile's non-root user with read-only root filesystem, dropped capabilities, resource limits, and liveness check in workflow run 78.
+- [x] Container starts as the Dockerfile's non-root user with read-only root filesystem, dropped capabilities, resource limits, and liveness check in workflow run 82.
 - [ ] Container image vulnerability scan has no unaccepted critical/high findings (not yet run).
 
 ### Protocol
-- [x] Official MCP SDK v2.3.0 client connects over Streamable HTTP with Bearer authentication and completes legacy 2025 and modern 2026 handshake, tools/list, tools/call, and tools-changed subscription against the mock LiteLLM Search API (workflow run 78).
+- [x] Official MCP SDK v2.3.0 client connects over Streamable HTTP with Bearer authentication and completes legacy 2025 and modern 2026 handshake, tools/list, tools/call, and tools-changed subscription against the mock LiteLLM Search API (workflow run 82).
 - [ ] MCP Inspector manual connection test against the deployed adapter.
-- [x] Missing/invalid Bearer token receives HTTP 401 (workflow run 78).
+- [x] Missing/invalid Bearer token receives HTTP 401 (workflow run 82).
 - [ ] Invalid Host and Origin are rejected.
-- [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 78).
-- [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 78).
-- [x] Dynamic registry replacement updates the live server tool list and publishes change events (workflow run 78).
-- [x] 2026 protocol client receives ToolsListChanged after a live discovery refresh and refetches tools/list (workflow run 78).
+- [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 82).
+- [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 82).
+- [x] Dynamic registry replacement updates the live server tool list and publishes change events (workflow run 82).
+- [x] 2026 protocol client receives ToolsListChanged after a live discovery refresh and refetches tools/list (workflow run 82).
 - [x] Legacy 2025 protocol client is tested for connection/list/call; background registry-change notification is not claimed for legacy clients, so reconnect/new conversation remains the fallback.
 
 ### LiteLLM
@@ -73,10 +73,10 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Confirm both approved Search Tools execute through the adapter.
 - [ ] Confirm a denied tool returns a sanitized error.
 - [ ] Confirm 401/403 are not retried.
-- [x] Confirm HTTP 429 retry and Search POST 5xx/no-retry behavior are bounded (workflow run 78).
-- [x] Empty result arrays are accepted (workflow run 78).
-- [x] Provider result fields survive JSON passthrough (workflow run 78).
-- [x] Mock end-to-end test confirms the LiteLLM key is not returned in the MCP tool response (workflow run 78).
+- [x] Confirm HTTP 429 retry and Search POST 5xx/no-retry behavior are bounded (workflow run 82).
+- [x] Empty result arrays are accepted (workflow run 82).
+- [x] Provider result fields survive JSON passthrough (workflow run 82).
+- [x] Mock end-to-end test confirms the LiteLLM key is not returned in the MCP tool response (workflow run 82).
 - [ ] Confirm the real LiteLLM key never appears in production logs or MCP responses.
 
 ### Actual clients and deployment
