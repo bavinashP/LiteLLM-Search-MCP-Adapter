@@ -51,12 +51,10 @@ class LiteLLMClient:
                             status_code=status_code,
                         )
 
-                    if status_code == 429 or 500 <= status_code <= 599:
-                        if attempt < 2:
-                            delay = self._retry_delay(headers.get("Retry-After"), attempt)
-                            retry = True
-                        else:
-                            retry = False
+                    retryable_status = status_code == 429 or (method == "GET" and 500 <= status_code <= 599)
+                    if retryable_status and attempt < 2:
+                        delay = self._retry_delay(headers.get("Retry-After"), attempt)
+                        retry = True
                     else:
                         retry = False
 
