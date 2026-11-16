@@ -8,9 +8,10 @@ import httpx
 import httpx2
 import pytest
 import uvicorn
+from mcp import Client
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-from mcp.client.subscriptions import ToolsListChanged, listen
+from mcp.client.subscriptions import ToolsListChanged
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -36,8 +37,17 @@ async def _wait_started(server: uvicorn.Server, task: asyncio.Task) -> None:
     raise AssertionError("Uvicorn server did not start")
 
 
+def _assert_search_result(result, expected_title: str, forbidden_secret: str) -> None:
+    assert result.is_error is not True
+    assert len(result.content) == 1
+    text = result.content[0].text
+    payload = json.loads(text)
+    assert payload["results"][0]["title"] == expected_title
+    assert forbidden_secret not in text
+
+
 @pytest.mark.asyncio
-async def test_streamable_http_search_end_to_end_with_litellm_contract():
+async def test_streamable_http_search_and_dynamic_notifications():
     adapter_port = _free_port()
     litellm_port = _free_port()
     adapter_token = "a" * 64
@@ -67,7 +77,7 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
         search_calls.append({"tool": tool_name, **body})
         return JSONResponse({
             "results": [
-                {"title": "MCP protocol", "url": "https://example.test/mcp", "snippet": "verified"}
+                {"title": f"Search via {tool_name}", "url": "https://example.test/mcp", "snippet": "verified"}
             ]
         })
 
@@ -118,46 +128,62 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
                 await asyncio.sleep(0.05)
             assert ready is True
 
+        # Verify the legacy 2025-11-25 ClientSession path still works.
         async with httpx2.AsyncClient(
             headers={"Authorization": f"Bearer {adapter_token}"},
             timeout=httpx2.Timeout(10, read=20),
-        ) as http_client:
-            async with streamable_http_client(
+        ) as legacy_http:
+            legacy_transport = streamable_http_client(
                 url=f"http://127.0.0.1:{adapter_port}/mcp",
-                http_client=http_client,
-            ) as (read_stream, write_stream):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    listed = await session.list_tools()
-                    names = [tool.name for tool in listed.tools]
-                    assert names == ["litellm_search__spp_parallel"]
-
-                    async with listen(session, tools_list_changed=True) as subscription:
-                        discovered_tool_names.append("openhands_tavily")
-                        event = await asyncio.wait_for(subscription.__anext__(), timeout=15)
-                        assert isinstance(event, ToolsListChanged)
-                        updated = await session.list_tools()
-                        updated_names = [tool.name for tool in updated.tools]
-                        assert updated_names == [
-                            "litellm_search__spp_parallel",
-                            "litellm_search__openhands_tavily",
-                        ]
-
-                    result = await session.call_tool(
+                http_client=legacy_http,
+            )
+            async with legacy_transport as (read_stream, write_stream):
+                async with ClientSession(read_stream, write_stream) as legacy_session:
+                    await legacy_session.initialize()
+                    assert legacy_session.protocol_version == "2025-11-25"
+                    legacy_tools = await legacy_session.list_tools()
+                    assert [tool.name for tool in legacy_tools.tools] == ["litellm_search__spp_parallel"]
+                    legacy_result = await legacy_session.call_tool(
                         "litellm_search__spp_parallel",
-                        {"query": "mcp protocol", "max_results": 1},
+                        {"query": "legacy protocol", "max_results": 1},
                     )
-                    assert result.is_error is not True
-                    assert len(result.content) == 1
-                    payload = json.loads(result.content[0].text)
-                    assert payload["results"][0]["title"] == "MCP protocol"
-                    assert litellm_key not in result.content[0].text
+                    _assert_search_result(legacy_result, "Search via spp_Parallel", litellm_key)
 
-        assert search_calls == [{
-            "tool": "spp_Parallel",
-            "query": "mcp protocol",
-            "max_results": 1,
-        }]
+        # Verify the modern 2026-07-28 Client API and live tools-changed subscription.
+        async with httpx2.AsyncClient(
+            headers={"Authorization": f"Bearer {adapter_token}"},
+            timeout=httpx2.Timeout(10, read=20),
+        ) as modern_http:
+            modern_transport = streamable_http_client(
+                url=f"http://127.0.0.1:{adapter_port}/mcp",
+                http_client=modern_http,
+            )
+            async with Client(modern_transport) as client:
+                assert client.protocol_version == "2026-07-28"
+                listed = await client.list_tools()
+                assert [tool.name for tool in listed.tools] == ["litellm_search__spp_parallel"]
+
+                async with client.listen(tools_list_changed=True) as subscription:
+                    discovered_tool_names.append("openhands_tavily")
+                    event = await asyncio.wait_for(subscription.__anext__(), timeout=15)
+                    assert isinstance(event, ToolsListChanged)
+                    updated = await client.list_tools()
+                    updated_names = [tool.name for tool in updated.tools]
+                    assert updated_names == [
+                        "litellm_search__spp_parallel",
+                        "litellm_search__openhands_tavily",
+                    ]
+
+                modern_result = await client.call_tool(
+                    "litellm_search__openhands_tavily",
+                    {"query": "modern protocol", "max_results": 1},
+                )
+                _assert_search_result(modern_result, "Search via openhands_tavily", litellm_key)
+
+        assert search_calls == [
+            {"tool": "spp_Parallel", "query": "legacy protocol", "max_results": 1},
+            {"tool": "openhands_tavily", "query": "modern protocol", "max_results": 1},
+        ]
     finally:
         adapter_server.should_exit = True
         litellm_server.should_exit = True
