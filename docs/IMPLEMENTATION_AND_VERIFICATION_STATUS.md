@@ -45,12 +45,12 @@ The first implementation scaffold and initial service code have been committed. 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [ ] GitHub Actions CI succeeds on the latest commit. A draft PR was opened to trigger CI, but no workflow run or check result was returned by GitHub at review time; do not infer success.
+- [ ] GitHub Actions CI succeeds on the latest lockfile-based Dockerfile commit. The previous workflow run passed 23 tests, lock generation, Compose validation, image build, and hardened-container smoke test; the latest lock-enforced build must be rerun before sign-off.
 - [ ] Python compilation succeeds.
 - [ ] All tests pass.
 - [ ] Static lint/type checks are added and pass.
-- [ ] Dependency lock is generated, reviewed, and committed.
-- [ ] Container builds from a clean checkout.
+- [x] Dependency lock is generated with pinned uv 0.13.8, committed, and checked by CI using `uv lock --check`.
+- [x] Container builds from a clean checkout using the committed `uv.lock`.
 - [ ] Container runs as non-root with read-only root filesystem.
 - [ ] Container image vulnerability scan has no unaccepted critical/high findings.
 
@@ -98,3 +98,8 @@ A repository commit is not proof that code passed CI. A successful Docker build 
 ## Rate-limit semantics
 
 The initial release uses one shared static adapter Bearer token for the configured MCP clients. The default rate limit is therefore a **global per-process limit** (120 HTTP requests per minute), not a distinct per-user or per-client quota. HTTP connection pooling caps outbound LiteLLM concurrency. Per-client identity and separate quotas require a future identity-aware authentication design (for example OAuth or distinct client tokens) and are not claimed by this release.
+
+
+## Dependency reproducibility
+
+The generated `uv.lock` was produced with uv 0.13.8 and committed to the repository. The Docker image now installs the application with `uv sync --locked --no-dev --no-editable`. CI checks that the lock remains synchronized with `pyproject.toml`, then installs/tests from the lock. The package build backend is pinned to setuptools 80.9.0. A new CI run is required to verify this final lock-enforced Docker build.
