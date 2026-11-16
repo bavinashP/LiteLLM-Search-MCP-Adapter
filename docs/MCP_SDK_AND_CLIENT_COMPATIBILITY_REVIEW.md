@@ -3,7 +3,7 @@
 **Review date:** 2026-11-17  
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Review scope:** Official MCP Python SDK v2.3.0, Streamable HTTP, dynamic tool registry, OpenHands native installation, and Visual Studio Code  
-**Implementation status:** Not started — architecture and compatibility review only
+**Implementation status:** Initial implementation committed — CI, integration tests, and deployment verification pending
 
 ---
 
@@ -367,3 +367,8 @@ These are deployment/test facts, not blockers to completing the design review. N
 - Current OpenHands documentation recommends Agent Canvas `Customize > MCP Servers` for local-backend SHTTP configuration and states that MCP server changes apply to new conversations. The old `openhands mcp` CLI documentation says that CLI is no longer actively maintained.
 - Current VS Code Copilot documentation supports environment-variable references in HTTP header values but does not provide a general input-prompt/SecretStorage interpolation bridge for that header path.
 - SDK v2.3.0 metadata confirms Python `>=3.10`; Python 3.12 is the selected container runtime, not the SDK minimum.
+
+
+## 13. Implementation follow-up
+
+The first implementation now uses a single shared static Bearer token, a 32-character minimum, constant-time comparison, and a global per-process rate limit (default 120 HTTP requests/minute). Because all clients initially share one token, this is not per-client/per-user throttling. The LiteLLM HTTP client avoids retrying Search POST requests after ambiguous transport failures or 5xx responses to reduce the risk of duplicate paid searches. CI and actual client verification remain pending.
