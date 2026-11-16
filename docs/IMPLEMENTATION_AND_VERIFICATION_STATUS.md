@@ -38,14 +38,14 @@ The first implementation scaffold and initial service code have been committed. 
 - An absent/empty allowlist exposes no tools.
 - Search Tool names are mapped to stable namespaced MCP names.
 - Search result count is an upper bound, not an exact promise.
-- The adapter limits queries, result count, HTTP timeout, retry attempts, response size, connections, and MCP request body size.
+- The adapter limits query length, result count, HTTP timeout, response size, connection pool size, MCP request body size, and global MCP requests/minute. Discovery GET requests have bounded retries; Search POST requests are not retried after ambiguous network/5xx failures to avoid duplicate provider execution or billing. HTTP 429 may be retried with a bounded delay.
 - Liveness is separate from readiness. Readiness does not expose sensitive configuration.
 - The Compose service binds to host loopback; remote access is expected through a TLS reverse proxy or private network design.
 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [ ] GitHub Actions CI succeeds on the latest commit.
+- [ ] GitHub Actions CI succeeds on the latest commit. A draft PR was opened to trigger CI, but no workflow run or check result was returned by GitHub at review time; do not infer success.
 - [ ] Python compilation succeeds.
 - [ ] All tests pass.
 - [ ] Static lint/type checks are added and pass.
@@ -93,3 +93,8 @@ The SDK's dynamic `add_tool()` / `remove_tool()` APIs update the in-memory regis
 ## No false completion claims
 
 A repository commit is not proof that code passed CI. A successful Docker build is not proof that the adapter can reach the private LiteLLM server. A successful MCP Inspector test is not proof that OpenHands and VS Code both work. Each gate above must be evidenced separately before production deployment is marked complete.
+
+
+## Rate-limit semantics
+
+The initial release uses one shared static adapter Bearer token for the configured MCP clients. The default rate limit is therefore a **global per-process limit** (120 HTTP requests per minute), not a distinct per-user or per-client quota. HTTP connection pooling caps outbound LiteLLM concurrency. Per-client identity and separate quotas require a future identity-aware authentication design (for example OAuth or distinct client tokens) and are not claimed by this release.
