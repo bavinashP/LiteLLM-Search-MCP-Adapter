@@ -1,0 +1,95 @@
+# Implementation and Verification Status
+
+**Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
+**Updated:** 2026-11-17
+
+## Status summary
+
+The first implementation scaffold and initial service code have been committed. This is not a production sign-off. CI execution, exact installed client-version checks, and deployment against the user's private LiteLLM/OpenHands/VS Code environments remain mandatory.
+
+| Area | Current state | Evidence / remaining work |
+|---|---|---|
+| LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
+| MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
+| Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
+| MCP Streamable HTTP | Implemented in source | CI/runtime proof still required |
+| Adapter Bearer authentication | Implemented in source | Automated ASGI tests committed; CI result pending |
+| Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
+| LiteLLM API client | Implemented in source | Mock-transport tests committed; CI result pending |
+| Explicit Search Tool allowlist | Implemented, default deny | Registry tests committed; CI result pending |
+| Dynamic discovery/refresh | Implemented in source | New protocol subscription notification; old-client reconnect behavior documented |
+| Last-known-good registry | Implemented in source | Registry test committed; CI result pending |
+| Response size/retry limits | Implemented in source | Additional adversarial tests and CI review required |
+| Docker non-root image | Implemented | Image build/scan not yet run |
+| Compose hardening | Implemented | Requires local deployment validation |
+| OpenHands integration | Configuration documented | Exact installed distribution/version and live connection not verified |
+| VS Code integration | Configuration documented | Exact version/harness and live connection not verified |
+| Dependency lock | **Pending** | Generate and commit a reviewed `uv.lock` or equivalent after resolving dependencies in a network-enabled build environment |
+| Container deployment | **Pending** | Must be run on the user's Linux host |
+| End-to-end search | **Pending** | Requires a new dedicated LiteLLM Virtual Key configured locally; do not paste it into chat |
+
+## Implementation details
+
+- The adapter uses only LiteLLM's Search Tools discovery and Search API routes.
+- LiteLLM provider credentials remain in LiteLLM.
+- The LiteLLM Virtual Key is read only from server-side environment configuration.
+- The MCP client token is a separate secret, minimum 32 characters, and must not equal the LiteLLM Virtual Key.
+- Search Tools are exposed only when their exact original names appear in `LITELLM_ALLOWED_SEARCH_TOOLS`.
+- An absent/empty allowlist exposes no tools.
+- Search Tool names are mapped to stable namespaced MCP names.
+- Search result count is an upper bound, not an exact promise.
+- The adapter limits queries, result count, HTTP timeout, retry attempts, response size, connections, and MCP request body size.
+- Liveness is separate from readiness. Readiness does not expose sensitive configuration.
+- The Compose service binds to host loopback; remote access is expected through a TLS reverse proxy or private network design.
+
+## Release-blocking verification checklist
+
+### Source and static checks
+- [ ] GitHub Actions CI succeeds on the latest commit.
+- [ ] Python compilation succeeds.
+- [ ] All tests pass.
+- [ ] Static lint/type checks are added and pass.
+- [ ] Dependency lock is generated, reviewed, and committed.
+- [ ] Container builds from a clean checkout.
+- [ ] Container runs as non-root with read-only root filesystem.
+- [ ] Container image vulnerability scan has no unaccepted critical/high findings.
+
+### Protocol
+- [ ] MCP Inspector can connect over Streamable HTTP with the Bearer token.
+- [ ] Missing/invalid Bearer token receives HTTP 401.
+- [ ] Invalid Host and Origin are rejected.
+- [ ] `tools/list` returns only allowlisted discovered tools.
+- [ ] `tools/call` routes to the exact LiteLLM Search Tool.
+- [ ] Dynamic add/remove changes the server registry.
+- [ ] 2026 protocol clients receive a tools-changed subscription event.
+- [ ] Legacy clients are tested; if they do not refresh automatically, reconnect/new conversation is the supported fallback.
+
+### LiteLLM
+- [ ] Create a new dedicated least-privilege Virtual Key locally.
+- [ ] Restrict its Search Tool grants to the exact adapter allowlist.
+- [ ] Confirm `GET /v1/search/tools` succeeds.
+- [ ] Confirm both approved Search Tools execute through the adapter.
+- [ ] Confirm a denied tool returns a sanitized error.
+- [ ] Confirm 401/403 are not retried.
+- [ ] Confirm 429/5xx retry behavior is bounded.
+- [ ] Confirm empty result arrays are valid.
+- [ ] Confirm provider-specific response fields survive serialization.
+- [ ] Confirm the LiteLLM key never appears in logs or MCP responses.
+
+### Actual clients and deployment
+- [ ] Record the actual OpenHands distribution and version. Current OpenHands documentation recommends Agent Canvas `Customize > MCP Servers` for local-backend configuration; the old CLI MCP commands are no longer actively maintained.
+- [ ] Configure OpenHands SHTTP with Bearer authentication and test a new conversation.
+- [ ] Record VS Code version and selected Copilot harness.
+- [ ] Configure VS Code user-level HTTP MCP settings using an environment-variable reference for the Bearer token.
+- [ ] Test tool listing, search execution, refresh/reconnect, and failure handling in both clients.
+- [ ] Deploy behind HTTPS and verify reverse-proxy streaming/no-buffering behavior.
+- [ ] Reboot the Linux host and verify Docker restart/health behavior.
+- [ ] Verify backup, secret rotation, and recovery procedures.
+
+## Known compatibility limitation
+
+The SDK's dynamic `add_tool()` / `remove_tool()` APIs update the in-memory registry but do not themselves notify every connected client. The implementation publishes the 2026 subscription-bus notification. For older clients, automatic background-refresh notification is not claimed; use a new conversation/reconnect if that client does not refresh its list. This must be verified with the actual installed client versions.
+
+## No false completion claims
+
+A repository commit is not proof that code passed CI. A successful Docker build is not proof that the adapter can reach the private LiteLLM server. A successful MCP Inspector test is not proof that OpenHands and VS Code both work. Each gate above must be evidenced separately before production deployment is marked complete.
