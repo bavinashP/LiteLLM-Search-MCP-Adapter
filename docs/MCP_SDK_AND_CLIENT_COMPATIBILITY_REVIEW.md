@@ -134,7 +134,7 @@ Authorization: Bearer <configured-api-key>
 
 This confirms that a server-managed Bearer token is compatible with the documented OpenHands SHTTP `api_key` configuration path.
 
-The token belongs in the OpenHands server configuration/secret handling, not in a conversation, source-controlled example, or shared repository file.
+The token belongs in OpenHands' encrypted MCP settings/secret handling, not in a conversation, source-controlled example, or shared repository file.
 
 ### 3.3 Configuration shape
 
@@ -178,7 +178,7 @@ A Bearer token can be supplied through the Authorization header. For the current
       "type": "http",
       "url": "https://<adapter-host>/mcp",
       "headers": {
-        "Authorization": "Bearer <adapter-bearer-token>"
+        "Authorization": "Bearer ${MCP_ADAPTER_TOKEN}"
       }
     }
   }
@@ -360,3 +360,10 @@ These are deployment/test facts, not blockers to completing the design review. N
 - Current OpenHands documentation recommends configuring remote SHTTP servers through Agent Canvas `Customize > MCP Servers` (or the supported SDK integration). The legacy `openhands mcp` CLI documentation says the CLI is no longer actively maintained.
 - Current VS Code Copilot configuration supports environment-variable references in HTTP header values. Its documentation explicitly cautions that input prompts and VS Code SecretStorage are not generally available as a bridge for Copilot HTTP header interpolation. Use a user-level configuration and an environment variable supplied to the VS Code/Copilot host process.
 - The adapter's first implementation uses a dedicated static Bearer token, enforces a minimum length of 32 characters, and rejects using the same value as the LiteLLM Virtual Key. This is a private deployment token profile, not OAuth 2.1.
+
+
+## 12. Final client configuration corrections
+
+- Current OpenHands documentation recommends Agent Canvas `Customize > MCP Servers` for local-backend SHTTP configuration and states that MCP server changes apply to new conversations. The old `openhands mcp` CLI documentation says that CLI is no longer actively maintained.
+- Current VS Code Copilot documentation supports environment-variable references in HTTP header values but does not provide a general input-prompt/SecretStorage interpolation bridge for that header path.
+- SDK v2.3.0 metadata confirms Python `>=3.10`; Python 3.12 is the selected container runtime, not the SDK minimum.
