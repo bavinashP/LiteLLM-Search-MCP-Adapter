@@ -85,7 +85,9 @@ class LiteLLMClient:
                     await asyncio.sleep(delay)
                     continue
             except (httpx.TimeoutException, httpx.TransportError) as exc:
-                if attempt < 2:
+                # A POST may have reached LiteLLM before the connection failed.
+                # Do not retry it blindly: the provider may already have executed/billed it.
+                if method == "GET" and attempt < 2:
                     await asyncio.sleep(0.25 * (2**attempt))
                     continue
                 raise LiteLLMAPIError("LiteLLM request failed due to a network or timeout error") from exc
