@@ -155,7 +155,7 @@ Any client that supports MCP Streamable HTTP and can send an Authorization Beare
 - The initial input schema accepts a non-empty query (maximum 4,000 characters) and `max_results` from 1 to 20 (default 5).
 - Provider responses must contain a `results` array; empty arrays are valid.
 - Network retries are bounded to two retries for discovery GET requests. Search POST requests are not retried after ambiguous network/5xx failures to avoid duplicate paid searches; HTTP 429 may be retried with a bounded Retry-After delay.
-- MCP requests are globally rate-limited per adapter process (default 120 requests/minute across clients sharing the token).
+- MCP requests are globally rate-limited per adapter process (default 120 requests/minute across all clients sharing the one adapter token; this is not per-user/per-client identity throttling).
 - Response size is bounded; secrets and search queries are not logged.
 - Health routes are intentionally minimal.
 - SDK registry changes publish the 2026 subscription notification. Older clients that do not implement this notification may need a reconnect/new conversation to see changes; this is not silently represented as automatic live refresh.
