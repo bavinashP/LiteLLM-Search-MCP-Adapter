@@ -132,11 +132,16 @@ OpenHands documents that Bearer authentication sends `Authorization: Bearer <tok
 
 ### Visual Studio Code
 
-Use the user-level MCP configuration (not a shared workspace file) and supply the token through an environment variable available to the VS Code/Copilot process:
+Use the current **GitHub Copilot harness** configuration, not the deprecated Local/editor-managed `servers` format.
+
+1. In a Copilot chat session, run **Chat: Open Customizations** and select **MCP Servers**.
+2. Add the remote server and choose **Global > Copilot Global** for a user-level configuration.
+3. The native configuration file is `~/.copilot/mcp-config.json`, or `$COPILOT_HOME/mcp-config.json` when `COPILOT_HOME` is set.
+4. Use the portable `mcpServers` format:
 
 ```json
 {
-  "servers": {
+  "mcpServers": {
     "litellm-search": {
       "type": "http",
       "url": "https://<your-adapter-host>/mcp",
@@ -148,7 +153,9 @@ Use the user-level MCP configuration (not a shared workspace file) and supply th
 }
 ```
 
-Set `MCP_ADAPTER_TOKEN` in the environment of the host process that launches VS Code. Current VS Code Copilot documentation supports environment-variable references in HTTP header values; do not assume that an input prompt or VS Code SecretStorage value can be interpolated into a Copilot HTTP header. Do not commit a populated credential.
+Set `MCP_ADAPTER_TOKEN` in the environment of the host where the Copilot harness runs. For remote sessions, this is the remote host/container environment, not necessarily the local desktop environment. Current Copilot portable configuration supports `${NAME}` references in HTTP header values. It does not support input prompts or a bridge to VS Code SecretStorage for this header path. Do not commit a populated credential.
+
+The older editor-managed `servers` format and `.vscode/mcp.json` path are deprecated for new Copilot setups; use the native Copilot destination above.
 
 ### Other MCP clients
 
