@@ -31,3 +31,6 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 110
 target-version = "py310"
+
+[tool.uv]
+required-version = "==0.13.8"
