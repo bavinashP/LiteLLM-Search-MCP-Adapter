@@ -26,6 +26,8 @@ jobs:
         run: |
           uv lock --check
           uv sync --locked --extra test
+      - name: Lint Python sources
+        run: uvx --from ruff==0.17.5 ruff check adapter tests
       - name: Compile Python sources
         run: uv run python -m compileall -q adapter tests
       - name: Run tests
