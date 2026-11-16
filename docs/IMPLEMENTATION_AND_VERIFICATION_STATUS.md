@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Pending
+**Final lock-enforced CI:** Passed — workflow run 62
 
 ## Status summary
 
@@ -13,16 +13,16 @@ The first implementation scaffold and initial service code have been committed. 
 | LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
 | MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
-| MCP Streamable HTTP | Implemented in source | CI/runtime proof still required |
-| Adapter Bearer authentication | Implemented in source | Automated ASGI tests committed; CI result pending |
+| MCP Streamable HTTP | Implemented in source | Container startup/liveness passed; full protocol Inspector/client verification remains pending |
+| Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 62 |
 | Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
-| LiteLLM API client | Implemented in source | Mock-transport tests committed; CI result pending |
-| Explicit Search Tool allowlist | Implemented, default deny | Registry tests committed; CI result pending |
+| LiteLLM API client | CI verified | Mock-transport tests passed in workflow run 62; private upstream integration pending |
+| Explicit Search Tool allowlist | CI verified | Default-deny and last-known-good registry tests passed in workflow run 62 |
 | Dynamic discovery/refresh | Implemented in source | New protocol subscription notification; old-client reconnect behavior documented |
 | Last-known-good registry | Implemented in source | Registry test committed; CI result pending |
 | Response size/retry limits | Implemented in source | Additional adversarial tests and CI review required |
-| Docker non-root image | Implemented | Image build/scan not yet run |
-| Compose hardening | Implemented | Requires local deployment validation |
+| Docker non-root image | CI verified | Locked image built and started read-only with dropped capabilities/resource limits; vulnerability scan pending |
+| Compose hardening | CI verified | Compose config validated; private-host deployment validation pending |
 | OpenHands integration | Configuration documented | Exact installed distribution/version and live connection not verified |
 | VS Code integration | Configuration documented | Exact version/harness and live connection not verified |
 | Dependency lock | **Complete** | `uv.lock` generated with uv 0.13.8, committed, and used by CI/Docker |
@@ -47,13 +47,13 @@ The first implementation scaffold and initial service code have been committed. 
 
 ### Source and static checks
 - [ ] GitHub Actions CI succeeds on the latest lockfile-based Dockerfile commit. The previous workflow run passed 23 tests, lock generation, Compose validation, image build, and hardened-container smoke test; the latest lock-enforced build must be rerun before sign-off.
-- [ ] Python compilation succeeds.
-- [ ] All tests pass.
+- [x] Python compilation succeeds in workflow run 62.
+- [x] All 23 tests pass in workflow run 62.
 - [ ] Static lint/type checks are added and pass.
 - [x] Dependency lock is generated with pinned uv 0.13.8, committed, and checked by CI using `uv lock --check`.
 - [x] Container builds from a clean checkout using the committed `uv.lock`.
-- [ ] Container runs as non-root with read-only root filesystem.
-- [ ] Container image vulnerability scan has no unaccepted critical/high findings.
+- [x] Container starts as the Dockerfile's non-root user with read-only root filesystem, dropped capabilities, resource limits, and liveness check in workflow run 62.
+- [ ] Container image vulnerability scan has no unaccepted critical/high findings (not yet run).
 
 ### Protocol
 - [ ] MCP Inspector can connect over Streamable HTTP with the Bearer token.
