@@ -55,3 +55,17 @@ async def test_liveness_route_does_not_require_bearer_token():
     middleware = BearerAuthMiddleware(app, "s" * 64)
     messages = await _run(middleware, "/health/live", [])
     assert messages[0]["status"] == 200
+
+
+@pytest.mark.asyncio
+async def test_mcp_requests_are_rate_limited_after_authentication():
+    token = "s" * 64
+    async def app(scope, receive, send):
+        await PlainTextResponse("ok")(scope, receive, send)
+
+    middleware = BearerAuthMiddleware(app, token, requests_per_minute=1)
+    headers = [(b"authorization", f"Bearer {token}".encode())]
+    first = await _run(middleware, "/mcp", headers)
+    second = await _run(middleware, "/mcp", headers)
+    assert first[0]["status"] == 200
+    assert second[0]["status"] == 429
