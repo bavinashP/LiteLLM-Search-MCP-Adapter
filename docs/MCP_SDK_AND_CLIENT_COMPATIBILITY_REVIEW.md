@@ -350,7 +350,7 @@ These are deployment/test facts, not blockers to completing the design review. N
 **VS Code transport/auth path:** documented for Streamable HTTP plus custom Authorization header.  
 **Dynamic registry:** supported by SDK APIs; notification delivery requires explicit implementation for both protocol eras.  
 **Security:** adapter-side Search Tool exposure allowlist is mandatory because LiteLLM's discovery endpoint is not permission-filtered.  
-**Implementation:** not started. No project code, deployment files, containers, or runtime settings were changed in this review.
+**Implementation:** initial adapter source, tests, Docker/Compose files, and a committed dependency lock now exist. CI passed 23 tests, locked Docker build, Compose validation, and hardened container liveness. Private LiteLLM and actual OpenHands/VS Code end-to-end checks remain pending.
 
 
 
