@@ -43,6 +43,7 @@ An empty adapter allowlist intentionally exposes no MCP tools.
 ## 3. Build and start
 
 ```bash
+git pull --ff-only
 docker compose build --pull
 docker compose up -d
 docker compose ps
@@ -184,3 +185,8 @@ Do not update automatically in production without reviewing changes and passing 
 - The adapter does not implement OAuth 2.1.
 - A generated dependency lock file and image vulnerability scan remain release-hardening tasks.
 - This runbook does not claim that the user's private Linux deployment or either actual client has already been completed.
+
+
+## 11. Dependency and image reproducibility
+
+The repository commits `uv.lock` and pins uv 0.13.8. The Dockerfile installs runtime dependencies using `uv sync --locked`; do not run an unlocked `pip install` in production builds. CI runs `uv lock --check` and builds the image from the committed lock. Update dependencies only through a reviewed lockfile change.
