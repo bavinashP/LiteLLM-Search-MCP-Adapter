@@ -45,7 +45,7 @@ The first implementation scaffold and initial service code have been committed. 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [ ] GitHub Actions CI succeeds on the latest commit. A draft PR was opened to trigger CI, but no workflow run or check result was returned by GitHub at review time; do not infer success.
+- [ ] GitHub Actions CI succeeds on the latest commit. The initial CI run completed successfully with 23 tests passing and Python compilation succeeding. A separate Docker/Compose build and runtime smoke-test job has been added and is awaiting its CI result.
 - [ ] Python compilation succeeds.
 - [ ] All tests pass.
 - [ ] Static lint/type checks are added and pass.
