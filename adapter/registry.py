@@ -83,8 +83,7 @@ class DynamicToolRegistry:
                         self._build_handler(tool.name),
                         name=key,
                         title=tool.name,
-                        description=tool.description
-                        or f"Search the web using LiteLLM Search Tool '{tool.name}' (provider: {tool.provider}).",
+                        description="Search the web through an explicitly approved LiteLLM Search Tool.",
                         structured_output=False,
                     )
                     self._registered[key] = tool
