@@ -5,7 +5,7 @@
 
 ## Status summary
 
-The first implementation scaffold and initial service code have been committed. This is not a production sign-off. CI execution, exact installed client-version checks, and deployment against the user's private LiteLLM/OpenHands/VS Code environments remain mandatory.
+The first implementation scaffold and initial service code have been committed. The current test suite contains 21 test cases across configuration, LiteLLM HTTP behavior, dynamic registry, and authentication/rate limiting. This is not a production sign-off. CI execution, exact installed client-version checks, and deployment against the user's private LiteLLM/OpenHands/VS Code environments remain mandatory.
 
 | Area | Current state | Evidence / remaining work |
 |---|---|---|
