@@ -24,7 +24,7 @@ The first implementation scaffold and initial service code have been committed. 
 | Compose hardening | Implemented | Requires local deployment validation |
 | OpenHands integration | Configuration documented | Exact installed distribution/version and live connection not verified |
 | VS Code integration | Configuration documented | Exact version/harness and live connection not verified |
-| Dependency lock | **Pending** | Generate and commit a reviewed `uv.lock` or equivalent after resolving dependencies in a network-enabled build environment |
+| Dependency lock | <badge>Complete</badge> | `uv.lock` generated with uv 0.13.8, committed, and used by CI/Docker |
 | Container deployment | **Pending** | Must be run on the user's Linux host |
 | End-to-end search | **Pending** | Requires a new dedicated LiteLLM Virtual Key configured locally; do not paste it into chat |
 
