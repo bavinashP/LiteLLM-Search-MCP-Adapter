@@ -45,7 +45,7 @@ The first implementation scaffold and initial service code have been committed. 
 ## Release-blocking verification checklist
 
 ### Source and static checks
-- [ ] GitHub Actions CI succeeds on the latest lockfile-based Dockerfile commit. The previous workflow run passed 23 tests, lock generation, Compose validation, image build, and hardened-container smoke test; the latest lock-enforced build must be rerun before sign-off.
+- [ ] Final lock-enforced GitHub Actions CI run succeeds. The prior workflow run passed 23 tests, lock generation, Compose validation, image build, and hardened-container smoke test; this PR reruns the final Dockerfile that installs exclusively from the committed lock.
 - [ ] Python compilation succeeds.
 - [ ] All tests pass.
 - [ ] Static lint/type checks are added and pass.
