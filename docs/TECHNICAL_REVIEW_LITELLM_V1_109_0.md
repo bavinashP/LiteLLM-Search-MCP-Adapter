@@ -2,7 +2,7 @@
 
 **Review date:** 2026-11-17  
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
-**Review status:** Source-level review completed for LiteLLM Search endpoints; live smoke tests completed by project owner; implementation not started.
+**Review status:** Source-level review completed for LiteLLM Search endpoints; live smoke tests completed by project owner; initial adapter implementation committed; CI and deployment verification pending.
 
 ## 1. Executive conclusion
 
@@ -193,3 +193,8 @@ The following work remains before implementation:
 ## 8. Follow-up corrections
 
 The exact MCP SDK v2.3.0 package metadata confirms `Requires-Python: >=3.10`; the container uses Python 3.12 as a project runtime choice. Current OpenHands setup guidance should target Agent Canvas/local-backend `Customize > MCP Servers` with SHTTP and Bearer authentication; the older CLI MCP guide states that the CLI is no longer actively maintained. Current VS Code Copilot HTTP headers should use environment-variable references rather than assuming input prompts or SecretStorage interpolation.
+
+
+## 9. Initial implementation follow-up
+
+The initial adapter source now avoids retrying Search POST requests after ambiguous network or 5xx failures, because LiteLLM/provider execution may already have occurred and could be billed. HTTP 429 may be retried with a bounded delay; discovery GET requests may retry transient failures. The adapter also enforces a response-size cap and a global per-process MCP request rate limit. These source changes still require successful CI and private end-to-end verification.
