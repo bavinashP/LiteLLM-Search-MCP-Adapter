@@ -163,14 +163,12 @@ Any client that supports MCP Streamable HTTP and can send an Authorization Beare
 ## Development and tests
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[test]"
-python -m compileall -q adapter tests
-pytest -q
+uv sync --locked --extra test
+uv run python -m compileall -q adapter tests
+uv run pytest -q
 ```
 
-The exact MCP SDK version is pinned. Transitive dependency locking is a separate release gate; do not claim reproducible locked builds until a generated and reviewed lock file is committed.
+The MCP SDK, all resolved runtime/test dependencies, and package build backend are locked. The project pins uv `0.13.8`; Docker installs from the same committed `uv.lock`. Update dependencies through a reviewed `uv lock --upgrade` change and rerun CI.
 
 ## Operational safety
 
