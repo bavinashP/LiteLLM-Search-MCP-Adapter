@@ -136,7 +136,7 @@ The adapter must not:
 
 Use Python and the official Model Context Protocol Python SDK, with Streamable HTTP as the deployed transport.
 
-The official SDK v2.3.0 release and tagged source have now been reviewed. Implementation baseline: Python 3.11+ and exact dependency pin `mcp==2.3.0`, with a committed dependency lock file. Use `MCPServer` (not the v1 `FastMCP` import path). The exact v2.3.0 APIs `add_tool()` and `remove_tool()` are available. These methods update the registry but do not automatically notify connected clients; notification publication must be implemented explicitly for both 2025-era and 2026-07-28 clients.
+The official SDK v2.3.0 release and tagged source have now been reviewed. Implementation baseline: Python 3.10+ and exact dependency pin `mcp==2.3.0`, with a committed dependency lock file. Use `MCPServer` (not the v1 `FastMCP` import path). The exact v2.3.0 APIs `add_tool()` and `remove_tool()` are available. These methods update the registry but do not automatically notify connected clients; notification publication must be implemented explicitly for both 2025-era and 2026-07-28 clients.
 
 Use an asynchronous HTTP client for LiteLLM requests. Keep the LiteLLM API client isolated from MCP protocol code so that it can be unit-tested independently.
 
@@ -200,11 +200,7 @@ The adapter must authenticate callers before serving tools or executing searches
 
 For broad client compatibility, clients commonly support an HTTP Authorization header; VS Code's official MCP configuration supports custom HTTP headers, and OpenHands documents MCP server configuration. However, support for a particular authentication flow varies by client and version.
 
-The implementation must select and document one initial authentication profile after testing both target clients:
-- a deployment-managed Bearer credential for a private, controlled network; or
-- OAuth 2.1 resource-server authorization for standards-based remote access.
-
-If OAuth 2.1 is implemented, the adapter acts as a resource server and validates tokens issued by an external authorization server; it does not issue user tokens itself. Do not claim full MCP OAuth authorization compliance for a simple static token check.
+**First-release decision:** use a deployment-managed static Bearer credential for the private-network/VPN deployment. Enforce a minimum 32-character token, require it to differ from the LiteLLM Virtual Key, and compare it in constant time. This is not OAuth 2.1 and must not be represented as OAuth or full MCP OAuth authorization compliance. Consider OAuth 2.1 only if centrally managed identities or internet-scale third-party access become a real requirement.
 
 ### 7.2 Adapter to LiteLLM
 
@@ -403,3 +399,8 @@ These are implementation gates, not reasons to stop the design work:
 - [ ] Implementation and automated test suite created.
 
 **This document is a technical design baseline only. No application code, dependencies, container image, or server configuration have been created or changed.**
+
+
+## 14. Implementation baseline corrections
+
+The exact MCP SDK v2.3.0 `pyproject.toml` declares Python `>=3.10`; the adapter container deliberately uses Python 3.12. The first-release client configuration uses the current OpenHands Agent Canvas/local-backend MCP settings (SHTTP + Bearer) and VS Code HTTP MCP configuration with a process environment-variable reference for the Authorization header. The legacy OpenHands MCP CLI is not the recommended setup path because its documentation marks that CLI as no longer actively maintained.
