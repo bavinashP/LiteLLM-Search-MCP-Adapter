@@ -24,7 +24,7 @@ async def test_discovery_parses_tools():
 @pytest.mark.asyncio
 async def test_search_encodes_tool_name_and_preserves_results():
     def handler(request):
-        assert request.url.path == "/v1/search/a%2Fb"
+        assert request.url.raw_path == b"/v1/search/a%2Fb"
         assert request.read() == b'{"query":"mcp","max_results":3}'
         return httpx.Response(200, json={"results": [{"title": "A", "url": "https://example.test", "snippet": "B"}]})
 
