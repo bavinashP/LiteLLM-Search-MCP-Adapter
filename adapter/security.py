@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+import asyncio
 import hmac
+import time
+from collections import deque
 
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 class BearerAuthMiddleware:
-    """Protect the MCP endpoint with a deployment-managed bearer token."""
+    """Protect the MCP endpoint with a deployment-managed bearer token and global rate limit."""
 
-    def __init__(self, app: ASGIApp, token: str) -> None:
+    def __init__(self, app: ASGIApp, token: str, requests_per_minute: int = 120) -> None:
         self.app = app
         self._token = token
+        self._limit = requests_per_minute
+        self._requests: deque[float] = deque()
+        self._rate_lock = asyncio.Lock()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -34,5 +40,21 @@ class BearerAuthMiddleware:
             )
             await response(scope, receive, send)
             return
+
+        if path == "/mcp":
+            now = time.monotonic()
+            async with self._rate_lock:
+                while self._requests and now - self._requests[0] >= 60:
+                    self._requests.popleft()
+                if len(self._requests) >= self._limit:
+                    retry_after = max(1, int(60 - (now - self._requests[0])))
+                    response = JSONResponse(
+                        {"error": "rate limit exceeded"},
+                        status_code=429,
+                        headers={"Retry-After": str(retry_after)},
+                    )
+                    await response(scope, receive, send)
+                    return
+                self._requests.append(now)
 
         await self.app(scope, receive, send)
