@@ -131,7 +131,7 @@ async def test_streamable_http_search_end_to_end_with_litellm_contract():
                         "litellm_search__spp_parallel",
                         {"query": "mcp protocol", "max_results": 1},
                     )
-                    assert result.isError is not True
+                    assert result.is_error is not True
                     assert len(result.content) == 1
                     payload = json.loads(result.content[0].text)
                     assert payload["results"][0]["title"] == "MCP protocol"
