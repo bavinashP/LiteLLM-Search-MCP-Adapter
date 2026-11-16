@@ -116,6 +116,17 @@ async def test_streamable_http_search_and_dynamic_notifications():
         await _wait_started(adapter_server, adapter_task)
 
         async with httpx.AsyncClient(timeout=2) as poll_client:
+            invalid_host = await poll_client.get(
+                f"http://127.0.0.1:{adapter_port}/health/live",
+                headers={"Host": "attacker.invalid"},
+            )
+            assert invalid_host.status_code == 421
+            invalid_origin = await poll_client.get(
+                f"http://127.0.0.1:{adapter_port}/health/live",
+                headers={"Origin": "https://attacker.invalid"},
+            )
+            assert invalid_origin.status_code == 403
+
             ready = False
             for _ in range(100):
                 try:
