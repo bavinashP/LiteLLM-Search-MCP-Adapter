@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Passed — workflow run 72 (24 tests, locked Docker build, container smoke test, and MCP-to-mock-LiteLLM search)
+**Final lock-enforced CI:** Passed — workflow run 77 (25 tests, locked Docker build, container smoke test, legacy and modern MCP clients, and live tools-changed subscription)
 
 ## Status summary
 
@@ -13,12 +13,12 @@ The first implementation scaffold and initial service code have been committed. 
 | LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
 | MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
-| MCP Streamable HTTP | CI verified | Official MCP SDK v2.3.0 client completed handshake, tools/list, and tools/call against a mocked LiteLLM API in workflow run 72; actual OpenHands/VS Code tests pending |
+| MCP Streamable HTTP | CI verified | Official SDK v2.3.0 legacy 2025 and modern 2026 clients completed handshake, tools/list, and tools/call; modern client received ToolsListChanged after a live registry refresh (workflow run 77) |
 | Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 72 |
 | Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
 | LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 72; private upstream integration pending |
 | Explicit Search Tool allowlist | CI verified | Default-deny and last-known-good registry tests passed in workflow run 72 |
-| Dynamic discovery/refresh | Implemented in source | New protocol subscription notification; old-client reconnect behavior documented |
+| Dynamic discovery/refresh | CI verified | New tool is discovered, registered, and announced with ToolsListChanged; old-client reconnect behavior documented |
 | Last-known-good registry | CI verified | Registry retention test passed in workflow run 72 |
 | Response size/retry limits | CI verified | Response cap, bounded retry, and no duplicate POST retry tests passed in workflow run 72 |
 | Docker non-root image | CI verified | Locked image built and started read-only with dropped capabilities/resource limits; vulnerability scan pending |
@@ -62,9 +62,9 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Invalid Host and Origin are rejected.
 - [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 72).
 - [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 72).
-- [ ] Dynamic add/remove changes the server registry.
-- [ ] 2026 protocol clients receive a tools-changed subscription event.
-- [ ] Legacy clients are tested; if they do not refresh automatically, reconnect/new conversation is the supported fallback.
+- [x] Dynamic registry replacement updates the live server tool list and publishes change events (workflow run 77).
+- [x] 2026 protocol client receives ToolsListChanged after a live discovery refresh and refetches tools/list (workflow run 77).
+- [x] Legacy 2025 protocol client is tested for connection/list/call; background registry-change notification is not claimed for legacy clients, so reconnect/new conversation remains the fallback.
 
 ### LiteLLM
 - [ ] Create a new dedicated least-privilege Virtual Key locally.
