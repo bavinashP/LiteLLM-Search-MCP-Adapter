@@ -36,7 +36,7 @@ def _base_url(value: str) -> str:
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ConfigurationError("LITELLM_BASE_URL must be an absolute HTTP(S) URL")
     if parsed.path not in {"", "/"} or parsed.username or parsed.password or parsed.query or parsed.fragment:
-        raise ConfigurationError("LITELLM_BASE_URL must not contain credentials, query, or fragment")
+        raise ConfigurationError("LITELLM_BASE_URL must not contain a path, credentials, query, or fragment")
     return value.rstrip("/")
 
 
@@ -58,12 +58,12 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         token = _required("MCP_BEARER_TOKEN")
-        if len(token) < 32:
-            raise ConfigurationError("MCP_BEARER_TOKEN must contain at least 32 characters")
+        if len(token) < 32 or not token.isascii():
+            raise ConfigurationError("MCP_BEARER_TOKEN must contain at least 32 ASCII characters")
         api_key = _required("LITELLM_API_KEY")
         if token == api_key:
             raise ConfigurationError("MCP_BEARER_TOKEN and LITELLM_API_KEY must be different secrets")
-        allowed_hosts = _csv("ADAPTER_ALLOWED_HOSTS", "localhost,127.0.0.1")
+        allowed_hosts = _csv("ADAPTER_ALLOWED_HOSTS", "localhost:8080,127.0.0.1:8080")
         if not allowed_hosts:
             raise ConfigurationError("ADAPTER_ALLOWED_HOSTS must contain at least one host")
         log_level = os.getenv("LOG_LEVEL", "INFO").upper()
