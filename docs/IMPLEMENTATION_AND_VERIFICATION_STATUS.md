@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Passed — workflow run 62
+**Final lock-enforced CI:** Passed — workflow run 62; additional MCP HTTP handshake test added and awaiting CI
 
 ## Status summary
 
