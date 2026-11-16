@@ -83,7 +83,7 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Record the actual OpenHands distribution and version. Current OpenHands documentation recommends Agent Canvas `Customize > MCP Servers` for local-backend configuration; the old CLI MCP commands are no longer actively maintained.
 - [ ] Configure OpenHands SHTTP with Bearer authentication and test a new conversation.
 - [ ] Record VS Code version and selected Copilot harness.
-- [ ] Configure VS Code user-level HTTP MCP settings using an environment-variable reference for the Bearer token.
+- [ ] Configure the current Copilot harness through Global > Copilot Global, using the top-level mcpServers format in ~/.copilot/mcp-config.json and an environment-variable reference for the Bearer token.
 - [ ] Test tool listing, search execution, refresh/reconnect, and failure handling in both clients.
 - [ ] Deploy behind HTTPS and verify reverse-proxy streaming/no-buffering behavior.
 - [ ] Reboot the Linux host and verify Docker restart/health behavior.
