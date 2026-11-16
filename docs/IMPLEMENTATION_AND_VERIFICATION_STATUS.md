@@ -38,7 +38,7 @@ The first implementation scaffold and initial service code have been committed. 
 - An absent/empty allowlist exposes no tools.
 - Search Tool names are mapped to stable namespaced MCP names.
 - Search result count is an upper bound, not an exact promise.
-- The adapter limits query length, result count, HTTP timeout, response size, connection pool size, MCP request body size, and global MCP requests/minute. Discovery GET requests have bounded retries; Search POST requests are not retried after ambiguous network/5xx failures to avoid duplicate provider execution or billing. HTTP 429 may be retried with a bounded delay.
+- The adapter limits query length, result count, HTTP timeout, response size, connection pool size, MCP request body size, legacy session count/idle duration, and global MCP requests/minute. Discovery GET requests have bounded retries; Search POST requests are not retried after ambiguous network/5xx failures to avoid duplicate provider execution or billing. HTTP 429 may be retried with a bounded delay.
 - Liveness is separate from readiness. Readiness does not expose sensitive configuration.
 - The Compose service binds to host loopback; remote access is expected through a TLS reverse proxy or private network design.
 
