@@ -92,7 +92,9 @@ LiteLLM Search Tools have their own Team allowlist and optional Virtual Key-leve
 
 The adapter must use a dedicated, least-privilege LiteLLM Virtual Key whose access is limited to the Search Tools intended for this adapter. It must not use a LiteLLM master key.
 
-**Important verification still required:** confirm whether `GET /v1/search/tools` returns a key-filtered list in the deployed v1.109.0 configuration, and verify the exact status/error response for a Search Tool that is not permitted to the key. Until confirmed, do not treat discovery results as authorization proof; LiteLLM's Search API remains the enforcement point for execution.
+Because discovery is not permission-filtered, the adapter must also maintain an explicit server-side Search Tool exposure allowlist (for example, `LITELLM_ALLOWED_SEARCH_TOOLS`). If the allowlist is missing or empty, expose no Search Tools. Register only the intersection of the latest valid discovery inventory and this allowlist. Never accept this allowlist from an MCP client.
+
+**Verified security finding:** the exact LiteLLM v1.109.0 `GET /v1/search/tools` handler returns configured Search Tool inventory and does not apply the Search Tool grant filter. The `POST /v1/search/{search_tool_name}` execution handler separately enforces Search Tool authorization. Discovery must never be treated as proof of execution permission. The adapter must apply its own explicit server-side exposure allowlist (default deny) before registering discovered tools, and the dedicated LiteLLM Virtual Key must be restricted to the same intended tool set.
 
 ## 4. Proposed Architecture
 
@@ -134,7 +136,7 @@ The adapter must not:
 
 Use Python and the official Model Context Protocol Python SDK, with Streamable HTTP as the deployed transport.
 
-The official SDK's current documentation identifies v2 as its stable release line and documents Streamable HTTP, runtime tool registration, and tool-list change notifications. The documented current runtime requirement is Python 3.11+. Pin an explicitly tested SDK version in the dependency lock file during implementation; do not use an unbounded dependency.
+The official SDK v2.3.0 release and tagged source have now been reviewed. Implementation baseline: Python 3.11+ and exact dependency pin `mcp==2.3.0`, with a committed dependency lock file. Use `MCPServer` (not the v1 `FastMCP` import path). The exact v2.3.0 APIs `add_tool()` and `remove_tool()` are available. These methods update the registry but do not automatically notify connected clients; notification publication must be implemented explicitly for both 2025-era and 2026-07-28 clients.
 
 Use an asynchronous HTTP client for LiteLLM requests. Keep the LiteLLM API client isolated from MCP protocol code so that it can be unit-tested independently.
 
@@ -145,7 +147,7 @@ Use an asynchronous HTTP client for LiteLLM requests. Keep the LiteLLM API clien
 - Dynamic tool registration and list-change notifications are documented.
 - Python is suitable for a small Linux container and straightforward HTTP integration.
 
-The exact SDK release, ASGI server configuration, and dependency versions remain implementation-time compatibility decisions. The project must test the pinned SDK against actual OpenHands and VS Code clients before declaring compatibility.
+Use `MCPServer.streamable_http_app(streamable_http_path="/mcp", stateless_http=False)` initially to preserve the ability to test legacy 2025-era clients alongside 2026-07-28 clients. The SDK v2.3.0 supports both protocol eras from the same server. OpenHands SHTTP configuration maps `api_key` to an Authorization Bearer header; VS Code supports `type: "http"` and custom HTTP headers. Exact installed client versions and dynamic-notification behavior still require integration tests before compatibility can be declared.
 
 ## 6. Dynamic Discovery and Tool Registry
 
@@ -368,7 +370,7 @@ These are implementation gates, not reasons to stop the design work:
 3. **Client authentication:** static deployment-managed Bearer token for a restricted network, or OAuth 2.1 for broader managed access.
 4. **LiteLLM service identity:** one dedicated Virtual Key for the adapter, or separate keys/identity mapping for different client groups.
 5. **Refresh interval:** choose and test a default (proposed initial range: 30–60 seconds) and make it configurable.
-6. **Common input contract:** confirm the exact accepted `max_results` bounds/default and whether additional shared fields are supported in LiteLLM v1.109.0.
+6. **Common input contract:** the initial adapter policy is `max_results` default 5 and range 1–20; confirm this with contract tests. Additional provider-specific fields remain disabled until verified.
 7. **Initial compatibility versions:** record exact OpenHands and VS Code versions before client acceptance testing.
 
 ## 15. Official References
