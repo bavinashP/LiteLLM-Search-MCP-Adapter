@@ -2,7 +2,7 @@
 
 **Repository:** `bavinashP/LiteLLM-Search-MCP-Adapter`  
 **Updated:** 2026-11-17  
-**Final lock-enforced CI:** Passed — workflow run 62; additional MCP HTTP handshake test added and awaiting CI
+**Final lock-enforced CI:** Passed — workflow run 72; additional MCP HTTP handshake test added and awaiting CI
 
 ## Status summary
 
@@ -13,10 +13,10 @@ The first implementation scaffold and initial service code have been committed. 
 | LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
 | MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
-| MCP Streamable HTTP | Implemented in source | Container startup/liveness passed; full protocol Inspector/client verification remains pending |
+| MCP Streamable HTTP | CI verified | Official MCP SDK v2.3.0 client completed handshake, tools/list, and tools/call against a mocked LiteLLM API in workflow run 72; actual OpenHands/VS Code tests pending |
 | Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 62 |
 | Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
-| LiteLLM API client | CI verified | Mock-transport tests passed in workflow run 62; private upstream integration pending |
+| LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 72; private upstream integration pending |
 | Explicit Search Tool allowlist | CI verified | Default-deny and last-known-good registry tests passed in workflow run 62 |
 | Dynamic discovery/refresh | Implemented in source | New protocol subscription notification; old-client reconnect behavior documented |
 | Last-known-good registry | Implemented in source | Registry test committed; CI result pending |
@@ -56,11 +56,12 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Container image vulnerability scan has no unaccepted critical/high findings (not yet run).
 
 ### Protocol
-- [ ] MCP Inspector can connect over Streamable HTTP with the Bearer token.
+- [x] Official MCP SDK v2.3.0 client connects over Streamable HTTP with Bearer authentication and completes handshake, tools/list, and tools/call against the mock LiteLLM Search API (workflow run 72).
+- [ ] MCP Inspector manual connection test against the deployed adapter.
 - [ ] Missing/invalid Bearer token receives HTTP 401.
 - [ ] Invalid Host and Origin are rejected.
-- [ ] `tools/list` returns only allowlisted discovered tools.
-- [ ] `tools/call` routes to the exact LiteLLM Search Tool.
+- [x] `tools/list` returns only allowlisted discovered tools in the mock end-to-end test (workflow run 72).
+- [x] `tools/call` routes to the exact mock LiteLLM Search Tool and preserves its results (workflow run 72).
 - [ ] Dynamic add/remove changes the server registry.
 - [ ] 2026 protocol clients receive a tools-changed subscription event.
 - [ ] Legacy clients are tested; if they do not refresh automatically, reconnect/new conversation is the supported fallback.
@@ -75,7 +76,8 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Confirm 429/5xx retry behavior is bounded.
 - [ ] Confirm empty result arrays are valid.
 - [ ] Confirm provider-specific response fields survive serialization.
-- [ ] Confirm the LiteLLM key never appears in logs or MCP responses.
+- [x] Mock end-to-end test confirms the LiteLLM key is not returned in the MCP tool response (workflow run 72).
+- [ ] Confirm the real LiteLLM key never appears in production logs or MCP responses.
 
 ### Actual clients and deployment
 - [ ] Record the actual OpenHands distribution and version. Current OpenHands documentation recommends Agent Canvas `Customize > MCP Servers` for local-backend configuration; the old CLI MCP commands are no longer actively maintained.
