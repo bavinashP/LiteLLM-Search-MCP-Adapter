@@ -13,12 +13,12 @@ The first implementation scaffold and initial service code have been committed. 
 | LiteLLM API contract | Verified earlier | Live owner-supplied tests plus exact LiteLLM v1.109.0 source review |
 | MCP SDK baseline | Selected | `mcp==2.3.0`; tagged API reviewed |
 | Runtime baseline | Selected | Python 3.12 container; SDK package metadata supports Python >=3.10 |
-| MCP Streamable HTTP | CI verified | Official MCP SDK v2.3.0 client completed handshake, tools/list, and tools/call against a mocked LiteLLM API in workflow run 72; actual OpenHands/VS Code tests pending |
+| MCP Streamable HTTP | CI verified | Official SDK v2.3.0 legacy 2025 and modern 2026 clients completed handshake, tools/list, and tools/call; modern client received ToolsListChanged after a live registry refresh (workflow run 77) |
 | Adapter Bearer authentication | CI verified | Automated ASGI authentication/rate-limit tests passed in workflow run 62 |
 | Host/Origin validation | SDK transport security configured | Deployment host/origin allowlists must be correct |
-| LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 72; private upstream integration pending |
+| LiteLLM API client | CI verified | Mock-transport and end-to-end mocked Search API tests passed in workflow run 77; private upstream integration pending |
 | Explicit Search Tool allowlist | CI verified | Default-deny and last-known-good registry tests passed in workflow run 62 |
-| Dynamic discovery/refresh | Implemented in source | New protocol subscription notification; old-client reconnect behavior documented |
+| Dynamic discovery/refresh | CI verified | New tool is discovered, registered, and announced with ToolsListChanged; old clients are tested for baseline calls and need reconnect/manual refresh for background changes |
 | Last-known-good registry | Implemented in source | Registry test committed; CI result pending |
 | Response size/retry limits | Implemented in source | Additional adversarial tests and CI review required |
 | Docker non-root image | CI verified | Locked image built and started read-only with dropped capabilities/resource limits; vulnerability scan pending |
@@ -56,7 +56,8 @@ The first implementation scaffold and initial service code have been committed. 
 - [ ] Container image vulnerability scan has no unaccepted critical/high findings (not yet run).
 
 ### Protocol
-- [x] Official MCP SDK v2.3.0 client connects over Streamable HTTP with Bearer authentication and completes handshake, tools/list, and tools/call against the mock LiteLLM Search API (workflow run 72).
+- [x] Official MCP SDK v2.3.0 legacy 2025-11-25 ClientSession connects over Streamable HTTP and completes handshake, tools/list, and tools/call (workflow run 77).
+- [x] Official MCP SDK v2.3.0 modern 2026-07-28 Client connects over Streamable HTTP and completes handshake, tools/list, and tools/call (workflow run 77).
 - [ ] MCP Inspector manual connection test against the deployed adapter.
 - [ ] Missing/invalid Bearer token receives HTTP 401.
 - [ ] Invalid Host and Origin are rejected.
