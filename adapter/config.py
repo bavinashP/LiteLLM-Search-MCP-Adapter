@@ -35,7 +35,7 @@ def _base_url(value: str) -> str:
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ConfigurationError("LITELLM_BASE_URL must be an absolute HTTP(S) URL")
-    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+    if parsed.path not in {"", "/"} or parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise ConfigurationError("LITELLM_BASE_URL must not contain credentials, query, or fragment")
     return value.rstrip("/")
 
@@ -57,10 +57,13 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
+        token = _required("MCP_BEARER_TOKEN")
+        if len(token) < 32:
+            raise ConfigurationError("MCP_BEARER_TOKEN must contain at least 32 characters")
         return cls(
             litellm_base_url=_base_url(_required("LITELLM_BASE_URL")),
             litellm_api_key=_required("LITELLM_API_KEY"),
-            mcp_bearer_token=_required("MCP_BEARER_TOKEN"),
+            mcp_bearer_token=token,
             allowed_search_tools=frozenset(_csv("LITELLM_ALLOWED_SEARCH_TOOLS")),
             allowed_hosts=_csv("ADAPTER_ALLOWED_HOSTS", "localhost,127.0.0.1"),
             allowed_origins=_csv("ADAPTER_ALLOWED_ORIGINS"),
